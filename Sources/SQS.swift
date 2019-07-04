@@ -8,6 +8,8 @@
 import Foundation
 import AWSLambdaAdapter
 import NIO
+import VaporLambdaAdapter
+
 
 public struct SQSRecordMeta {
     
@@ -21,26 +23,35 @@ public typealias SQSPayload = GroupedRecords<EventLoopGroup, SQSRecordMeta, SQSM
 public typealias SQSHandler = (SQSPayload) -> EventLoopFuture<Void>
 
 
-public typealias SQSRecordDict = [String: Any]
-
 public struct SQSRecord {
 
-    let body: String
-    let awsRegion: String
-    let eventSource: String
-    let receiptHandle: String
-    let messageId: String
-    let eventSourceARN: String
+    public let body: String
+    public let awsRegion: String
+    public let eventSource: String
+    public let receiptHandle: String
+    public let messageId: String
+    public let eventSourceARN: String
+    public let senderId: String
+    public let sentTimestamp: Date
+    public let approximateFirstReceiveTimestamp: Date
+    public let approximateReceiveCount: Int
 
     
-    init?(dict: SQSRecordDict) {
+    public init?(dict: [String: Any]) {
         if
             let body = SQSRecord.extractRootKey(dict: dict, key: "body"),
             let awsRegion = SQSRecord.extractRootKey(dict: dict, key: "awsRegion"),
             let eventSource = SQSRecord.extractRootKey(dict: dict, key: "eventSource"),
             let receiptHandle = SQSRecord.extractRootKey(dict: dict, key: "receiptHandle"),
             let messageId = SQSRecord.extractRootKey(dict: dict, key: "messageId"),
-            let eventSourceARN = SQSRecord.extractRootKey(dict: dict, key: "eventSourceARN")
+            let eventSourceARN = SQSRecord.extractRootKey(dict: dict, key: "eventSourceARN"),
+            let attributes = dict["attributes"] as? [String: Any],
+            let senderId = SQSRecord.extractRootKey(dict: attributes, key: "SenderId"),
+            let sentTimestamp = SQSRecord.extactUnixTime(dict: attributes, key: "SentTimestamp"),
+            let approximateFirstReceiveTimestamp = SQSRecord.extactUnixTime(dict: attributes, key: "ApproximateFirstReceiveTimestamp"),
+            let approximateReceiveCountStr = SQSRecord.extractRootKey(dict: attributes, key: "ApproximateReceiveCount"),
+            let approximateReceiveCount = Int(approximateReceiveCountStr)
+
         {
             self.body = body
             self.awsRegion = awsRegion
@@ -48,14 +59,28 @@ public struct SQSRecord {
             self.receiptHandle = receiptHandle
             self.messageId = messageId
             self.eventSourceARN = eventSourceARN
+            self.senderId = senderId
+            self.sentTimestamp = sentTimestamp
+            self.approximateFirstReceiveTimestamp = approximateFirstReceiveTimestamp
+            self.approximateReceiveCount = approximateReceiveCount
         }
         else {
             return nil
         }
     }
     
-    static func extractRootKey(dict: SQSRecordDict, key: String) -> String? {
+    static func extractRootKey(dict: [String: Any], key: String) -> String? {
         return dict[key] as? String
+    }
+    
+    static func extactUnixTime(dict: [String: Any], key: String) -> Date? {
+        if  let timestampStr = SQSRecord.extractRootKey(dict: dict, key: key),
+            let timestampMilli = TimeInterval(timestampStr) {
+            return Date(timeIntervalSince1970: timestampMilli / TimeInterval(1000))
+        }
+        else {
+            return nil
+        }
     }
     
     
@@ -106,15 +131,14 @@ class SQS {
         }
         
         let dispatcher = LambdaEventDispatcher(handler: SQSLambdaEventHandler())
+        let logger = LambdaLogger()
         do {
-            print("starting")
+            logger.debug("starting SQS handler")
             try dispatcher.start().wait()
         }
         catch let error {
-            print(error)
+            logger.report(error: error, verbose: true)
         }
-        
-    
     }
     
 }

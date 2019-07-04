@@ -4,12 +4,11 @@ import PackageDescription
 let package = Package(
     name: "swift-aws",
     products: [
-        .library(name: "SwiftAWS", targets: ["SwiftAWS"])
+        .library(name: "SwiftAWS", targets: ["SwiftAWS"]),
+        .library(name: "Sample", targets: ["Sample"])
     ],
     dependencies: [
-        .package(url: "https://github.com/kperson/vapor-lambda-adapter.git", .branch("master")),
-        //.package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", .upToNextMinor(from: "1.0.0"))
-        
+        .package(url: "https://github.com/kperson/vapor-lambda-adapter.git", .branch("master"))
     ],
     targets: [
         .target(
@@ -18,6 +17,20 @@ let package = Package(
                 "VaporLambdaAdapter"
             ],
             path: "./Sources"
+        ),
+        .target(
+            name: "Sample",
+            dependencies: [
+                "SwiftAWS"
+            ],
+            path: "./Sample"
+        ),
+        .testTarget(
+            name: "SwiftAWSTests",
+            dependencies: [
+                "SwiftAWS"
+            ],
+            path: "./Tests"
         )
     ]
 )

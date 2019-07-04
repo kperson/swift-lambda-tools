@@ -42,6 +42,29 @@ public struct MessageAttributeValue {
     }
 }
 
+public extension MessageAttributeValue {
+    
+    var numberValue: Decimal? {
+        if let str = stringValue, dataType.starts(with: "Number.") || dataType == "Number" {
+            return Decimal(string: str)
+        }
+        else {
+            return nil
+        }
+    }
+    
+    var numberListValues: [Decimal] {
+        if dataType.starts(with: "Number.") || dataType == "Number" {
+            return stringListValues.compactMap { Decimal(string: $0) }
+        }
+        else {
+            return []
+        }
+    }
+    
+}
+
+
 public protocol SQSRecordMeta {
     
     var awsRegion: String { get }

@@ -7,6 +7,7 @@
 
 import Foundation
 import Vapor
+import AWSLambdaAdapter
 
 
 
@@ -21,6 +22,10 @@ public enum EventHandler {
     
     case sqs(
         handler: SQSHandler
+    )
+    
+    case custom(
+        handler: LambdaEventHandler
     )
     
 }
@@ -52,6 +57,8 @@ public class AWSApp {
                 )
             case .sqs(let sqsHandler):
                  SQS.run(handler: sqsHandler)
+            case .custom(let handler):
+                Custom.run(handler: handler)
             }
             
         }

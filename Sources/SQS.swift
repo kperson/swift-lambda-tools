@@ -11,14 +11,7 @@ import NIO
 import VaporLambdaAdapter
 
 
-public struct SQSRecordMeta {
-    
-    public let messageId: String
-    
-}
-
 public typealias SQSMessage = String
-public typealias SQSPayload = GroupedRecords<EventLoopGroup, SQSRecordMeta, SQSMessage>
 
 public typealias SQSHandler = (SQSPayload) -> EventLoopFuture<Void>
 
@@ -85,52 +78,14 @@ public struct SQSRecord {
     
     
 }
-
-
-//     let x =
-//        [
-//            "attributes": [
-//                "ApproximateReceiveCount": "1",
-//                "SenderId": "AIDAIUNHL6CCFSK7T2WX2",
-//                "ApproximateFirstReceiveTimestamp":
-//                "1562151479459",
-//                "SentTimestamp": "1562151479451"
-//            ],
-//            "md5OfMessageAttributes": "9581b7aaecccb3b950c172bd639c2eda",
-//            "eventSourceARN": "arn:aws:sqs:us-east-1:193125195061:queue_1",
-//            "md5OfBody": "515ad0d3b6949a4190341780cdc3d839",
-//            "awsRegion":
-//            "us-east-1",
-//            "messageAttributes": [
-//                "hi": [
-//                    "stringValue": "kopkopkop", "binaryListValues": [], "stringListValues": [], "dataType": "String.kokpk"
-//                ]
-//            ],
-//            "messageId": "752adde7-ce6d-4d99-8438-09fc645947a4",
-//            "eventSource": "aws:sqs",
-//            "body": "jiof jafod jafaido jiokopkopkopkopkop kopkop",
-//            "receiptHandle": "AQEBg3Sh8kmN/NpEpQv23BerZCXHJHm59tPtdJE+q8X5kAkeuIZGdSG/u3NLF2OZfEeowtM2saZLlOzxjYASTewcXYb71YGu9Bn1y3rDey90Yrf4Die6SMM5TXjVcWVubQ2SqBYnP8R1UFhWw1UrQ/wjaNRKnXxc+LogRQH0stVWws1k9byvrIzvQojeagulOWMaf4sXWEBKnMEmG+gAFRRANjtoEEjGLyb54pRHgB0e31m/X+TzKmCQfW/X1UjezyxCfZDkcw7kAZ891Uw74xg9JXhDYMcglkEyWRFynoNzVpbl+OohSemWPSFH4rw+aUwPxXN49vI101KYwvVM+X28f+zxYLTM13R7Ifm7r7duw3mv29hJ8DYidHX3oSpIEySn"
-//        ]
-//        ]
-    
-//}
+public typealias SQSPayload = GroupedRecords<EventLoopGroup, SQSRecord, SQSMessage>
 
 
 class SQS {
     
-    class func run(handler: SQSHandler) {
+    class func run(handler: @escaping SQSHandler) {
         
-        class SQSLambdaEventHandler: LambdaEventHandler {
-            
-            func handle(
-                data: [String: Any],
-                eventLoopGroup: EventLoopGroup
-            ) -> EventLoopFuture<[String: Any]> {
-                return eventLoopGroup.eventLoop.newSucceededFuture(result: [:])
-            }
-        }
-        
-        let dispatcher = LambdaEventDispatcher(handler: SQSLambdaEventHandler())
+        let dispatcher = LambdaEventDispatcher(handler: SQSLambdaEventHandler(handler: handler))
         let logger = LambdaLogger()
         do {
             logger.debug("starting SQS handler")
@@ -141,4 +96,33 @@ class SQS {
         }
     }
     
+}
+
+
+class SQSLambdaEventHandler: LambdaEventHandler {
+    
+    let handler: SQSHandler
+    
+    init(handler: @escaping SQSHandler) {
+        self.handler = handler
+    }
+    
+    func handle(
+        data: [String: Any],
+        eventLoopGroup: EventLoopGroup
+    ) -> EventLoopFuture<[String: Any]> {
+        let logger = LambdaLogger()
+        logger.info(data.description)
+        if let records = data["Records"] as? [[String: Any]] {
+            let sqsRecords = records
+                .compactMap { SQSRecord(dict: $0) }
+                .map { r in Record(meta: r, body: r.body) }
+            
+            let grouped: SQSPayload = GroupedRecords(context: eventLoopGroup, records: sqsRecords)
+            return handler(grouped).map { _ in [:] }
+        }
+        else {
+            return eventLoopGroup.eventLoop.newSucceededFuture(result: [:])
+        }
+    }
 }

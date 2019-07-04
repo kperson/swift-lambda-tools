@@ -2,8 +2,9 @@ import VaporLambdaAdapter
 import SwiftAWS
 
 
-let logger: Logger = LambdaLogger()
+let logger = LambdaLogger()
 let handler: SQSHandler = { payload in
+    logger.info(payload.records.description)
     return payload.context.next().newSucceededFuture(result: Void())
 }
 

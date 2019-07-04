@@ -57,10 +57,6 @@ public class AWSApp {
         }
     }
     
-    private func startHttpServer() {
-        
-    }
-    
 }
 
 public extension AWSApp {

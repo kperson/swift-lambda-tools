@@ -6,9 +6,30 @@
 //
 
 import Foundation
+import NIO
+import AWSLambdaAdapter
+import VaporLambdaAdapter
 
 
-public struct SNSRecord {
+public protocol SNSRecordMeta {
+    
+    var eventSource: String { get }
+    var eventSubscriptionArn: String { get }
+    var unsubscribeUrl: String { get }
+    var timestamp: Date { get }
+    var message: String { get }
+    var topicArn: String { get }
+    var subject: String? { get }
+    
+}
+
+public protocol SNSBodyAttributes {
+    
+    var message: String { get }
+    
+}
+
+public struct SNSRecord: SNSRecordMeta, SNSBodyAttributes {
     
     static func createDateFormatter() -> DateFormatter {
         let dateFormatter = DateFormatter()
@@ -54,6 +75,49 @@ public struct SNSRecord {
             return nil
         }
         
+    }
+    
+    
+    
+}
+
+
+
+public typealias SNSPayload = GroupedRecords<EventLoopGroup, SNSRecordMeta, SNSBodyAttributes>
+
+public typealias SNSHandler = (SNSPayload) -> EventLoopFuture<Void>
+
+class SNSLambdaEventHandler: LambdaEventHandler {
+    
+    let handler: SNSHandler
+    
+    init(handler: @escaping SNSHandler) {
+        self.handler = handler
+    }
+    
+    func handle(
+        data: [String: Any],
+        eventLoopGroup: EventLoopGroup
+    ) -> EventLoopFuture<[String: Any]> {
+        if let records = data["Records"] as? [[String: Any]] {
+            let snsRecords = records
+                .compactMap { SNSRecord(dict: $0) }
+                .map { r in Record<SNSRecordMeta, SNSBodyAttributes>(meta: r, body: r) }
+            
+            let grouped: SNSPayload = GroupedRecords(context: eventLoopGroup, records: snsRecords)
+            return handler(grouped).map { _ in [:] }
+        }
+        else {
+            return eventLoopGroup.eventLoop.newSucceededFuture(result: [:])
+        }
+    }
+}
+
+
+class SNS {
+    
+    class func run(handler: @escaping SNSHandler) {
+        Custom.run(handler: SNSLambdaEventHandler(handler: handler))
     }
     
 }

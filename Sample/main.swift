@@ -4,14 +4,20 @@ import SwiftAWS
 
 
 let logger = LambdaLogger()
-let handler: SQSHandler = { payload in
+let awsApp = AWSApp()
+
+awsApp.addSQS(name: "com.github.kperson.sqs.test") { payload in
+    logger.info("got SQS payload: \(payload)")
     return payload.context.eventLoop.newSucceededFuture(result: Void())
 }
 
-let awsApp = AWSApp()
+awsApp.addSNS(name: "com.github.kperson.sns.test") { payload in
+    logger.info("got SNS payload: \(payload)")
+    return payload.context.eventLoop.newSucceededFuture(result: Void())
+}
 
-awsApp.addSQS(name: "com.github.kperson.sqs.test", handler: handler)
-awsApp.addCustom(name: "com.github.kpersson.custom.test") { data, eventGroup in
+awsApp.addCustom(name: "com.github.kpersson.custom.test") { payload, eventGroup in
+    logger.info("got custom payload: \(payload), echo")
     eventGroup.eventLoop.newSucceededFuture(result: data)
 }
 

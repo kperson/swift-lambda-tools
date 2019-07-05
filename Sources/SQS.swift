@@ -11,7 +11,6 @@ import NIO
 import VaporLambdaAdapter
 
 
-
 public typealias SQSHandler = (SQSPayload) -> EventLoopFuture<Void>
 
 
@@ -188,8 +187,6 @@ class SQSLambdaEventHandler: LambdaEventHandler {
         data: [String: Any],
         eventLoopGroup: EventLoopGroup
     ) -> EventLoopFuture<[String: Any]> {
-        let logger = LambdaLogger()
-        logger.info(data.description)
         if let records = data["Records"] as? [[String: Any]] {
             let sqsRecords = records
                 .compactMap { SQSRecord(dict: $0) }

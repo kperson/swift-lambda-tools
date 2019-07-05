@@ -24,6 +24,10 @@ public enum EventHandler {
         handler: SQSHandler
     )
     
+    case sns(
+        handler: SNSHandler
+    )
+    
     case custom(
         handler: LambdaEventHandler
     )
@@ -55,6 +59,8 @@ public class AWSApp {
                     services: services,
                     handler: httpHandler
                 )
+            case .sns(handler: let snsHandler):
+                SNS.run(handler: snsHandler)
             case .sqs(let sqsHandler):
                  SQS.run(handler: sqsHandler)
             case .custom(let handler):
@@ -81,6 +87,10 @@ public extension AWSApp {
     
     func addSQS(name: String, handler: @escaping SQSHandler) {
         add(name: name, handler: .sqs(handler: handler))
+    }
+    
+    func addSNS(name: String, handler: @escaping SNSHandler) {
+        add(name: name, handler: .sns(handler: handler))
     }
     
     func addHTTPServer(

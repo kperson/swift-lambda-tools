@@ -40,3 +40,16 @@ struct CustomLambdaEventFuncWrapper: LambdaEventHandler {
     }
     
 }
+
+
+public struct ContextData<C, D> {
+    
+    public let context: C
+    public let data: D
+    
+    public init(context: C, data: D) {
+        self.context = context
+        self.data = data
+    }
+    
+}

@@ -16,9 +16,9 @@ awsApp.addSNS(name: "com.github.kperson.sns.test") { payload in
     return payload.context.eventLoop.newSucceededFuture(result: Void())
 }
 
-awsApp.addCustom(name: "com.github.kpersson.custom.test") { payload, eventGroup in
+awsApp.addCustom(name: "com.github.kperson.custom.test") { payload in
     logger.info("got custom payload: \(payload), echo")
-    eventGroup.eventLoop.newSucceededFuture(result: data)
+    return payload.context.eventLoop.newSucceededFuture(result: payload.data)
 }
 
 try? awsApp.run()

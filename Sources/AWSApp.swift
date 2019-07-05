@@ -72,6 +72,7 @@ public class AWSApp {
     
 }
 
+
 public extension AWSApp {
 
     func addCustom(name: String, handler: LambdaEventHandler) {
@@ -80,9 +81,12 @@ public extension AWSApp {
     
     func addCustom(
         name: String,
-        function: @escaping ([String: Any], EventLoopGroup) -> EventLoopFuture<[String : Any]>
+        function: @escaping (ContextData<EventLoopGroup, [String : Any]>) -> EventLoopFuture<[String : Any]>
     ) {
-        add(name: name, handler: .custom(handler: CustomLambdaEventFuncWrapper(function: function)))
+        let h: ([String: Any], EventLoopGroup) -> EventLoopFuture<[String : Any]> = { dict, group in
+            function(ContextData(context: group, data: dict))
+        }
+        add(name: name, handler: .custom(handler: CustomLambdaEventFuncWrapper(function: h)))
     }
     
     func addSQS(name: String, handler: @escaping SQSHandler) {

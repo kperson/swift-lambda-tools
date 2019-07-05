@@ -15,7 +15,7 @@ import VaporLambdaAdapter
 public typealias SQSHandler = (SQSPayload) -> EventLoopFuture<Void>
 
 
-public struct MessageAttributeValue {
+public struct SQSMessageAttributeValue {
     let binaryListValues: [Data]
     let binaryValue: Data?
     
@@ -42,7 +42,7 @@ public struct MessageAttributeValue {
     }
 }
 
-public extension MessageAttributeValue {
+public extension SQSMessageAttributeValue {
     
     var numberValue: Decimal? {
         if let str = stringValue, dataType.starts(with: "Number.") || dataType == "Number" {
@@ -81,7 +81,7 @@ public protocol SQSRecordMeta {
 
 public protocol SQSBodyAttributes {
 
-    var messageAttributes: [String : MessageAttributeValue] { get }
+    var messageAttributes: [String : SQSMessageAttributeValue] { get }
     var body: String { get }
 
 }
@@ -98,7 +98,7 @@ public struct SQSRecord: SQSRecordMeta, SQSBodyAttributes {
     public let sentTimestamp: Date
     public let approximateFirstReceiveTimestamp: Date
     public let approximateReceiveCount: Int
-    public let messageAttributes: [String : MessageAttributeValue]
+    public let messageAttributes: [String : SQSMessageAttributeValue]
 
     
     public init?(dict: [String : Any]) {
@@ -128,9 +128,9 @@ public struct SQSRecord: SQSRecordMeta, SQSBodyAttributes {
             self.approximateReceiveCount = approximateReceiveCount
             
             let messageAttributesDict = dict["messageAttributes"] as? [String : [String: Any]] ?? [:]
-            let messageAttributePairs = messageAttributesDict.compactMap { arg -> (String, MessageAttributeValue)? in
+            let messageAttributePairs = messageAttributesDict.compactMap { arg -> (String, SQSMessageAttributeValue)? in
                 let (k, v) = arg
-                if let ma = MessageAttributeValue(dict: v) {
+                if let ma = SQSMessageAttributeValue(dict: v) {
                     return (k, ma)
                 }
                 else {
@@ -170,16 +170,7 @@ public typealias SQSPayload = GroupedRecords<EventLoopGroup, SQSRecordMeta, SQSB
 class SQS {
     
     class func run(handler: @escaping SQSHandler) {
-        
-        let dispatcher = LambdaEventDispatcher(handler: SQSLambdaEventHandler(handler: handler))
-        let logger = LambdaLogger()
-        do {
-            logger.debug("starting SQS handler")
-            try dispatcher.start().wait()
-        }
-        catch let error {
-            logger.report(error: error, verbose: true)
-        }
+        Custom.run(handler: SQSLambdaEventHandler(handler: handler))
     }
     
 }

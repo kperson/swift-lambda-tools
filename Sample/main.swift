@@ -1,13 +1,18 @@
 import VaporLambdaAdapter
+import AWSLambdaAdapter
 import SwiftAWS
 
 
 let logger = LambdaLogger()
 let handler: SQSHandler = { payload in
-    logger.info(payload.records[0].body.messageAttributes["abc"]?.numberValue)
-    return payload.context.next().newSucceededFuture(result: Void())
+    return payload.context.eventLoop.newSucceededFuture(result: Void())
 }
 
 let awsApp = AWSApp()
+
 awsApp.addSQS(name: "com.github.kperson.sqs.test", handler: handler)
+awsApp.addCustom(name: "com.github.kpersson.custom.test") { data, eventGroup in
+    eventGroup.eventLoop.newSucceededFuture(result: data)
+}
+
 try? awsApp.run()

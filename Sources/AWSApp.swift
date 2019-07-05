@@ -67,6 +67,17 @@ public class AWSApp {
 }
 
 public extension AWSApp {
+
+    func addCustom(name: String, handler: LambdaEventHandler) {
+        add(name: name, handler: .custom(handler: handler))
+    }
+    
+    func addCustom(
+        name: String,
+        function: @escaping ([String: Any], EventLoopGroup) -> EventLoopFuture<[String : Any]>
+    ) {
+        add(name: name, handler: .custom(handler: CustomLambdaEventFuncWrapper(function: function)))
+    }
     
     func addSQS(name: String, handler: @escaping SQSHandler) {
         add(name: name, handler: .sqs(handler: handler))

@@ -5,24 +5,38 @@
 //  Created by Kelton Person on 7/4/19.
 //
 
-import Foundation
 import AWSLambdaAdapter
-import NIO
 import VaporLambdaAdapter
+import NIO
 
-class Custom {
+public class Custom {
     
     class func run(handler: LambdaEventHandler) {
         
         let dispatcher = LambdaEventDispatcher(handler: handler)
         let logger = LambdaLogger()
         do {
-            logger.debug("starting custom handler")
             try dispatcher.start().wait()
         }
         catch let error {
             logger.report(error: error, verbose: true)
         }
+    }
+    
+}
+
+
+
+struct CustomLambdaEventFuncWrapper: LambdaEventHandler {
+    
+    let function: ([String: Any], EventLoopGroup) -> EventLoopFuture<[String : Any]>
+    
+    init(function: @escaping ([String: Any], EventLoopGroup) -> EventLoopFuture<[String : Any]>) {
+        self.function = function
+    }
+    
+    func handle(data: [String : Any], eventLoopGroup: EventLoopGroup) -> EventLoopFuture<[String : Any]> {
+        return function(data, eventLoopGroup)
     }
     
 }

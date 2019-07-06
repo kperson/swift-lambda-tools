@@ -52,4 +52,8 @@ public struct ContextData<C, D> {
         self.data = data
     }
     
+    public func map<NewD>(_ f: (D) -> NewD) -> ContextData<C, NewD> {
+        return ContextData<C, NewD>(context: context, data: f(data))
+    }
+    
 }

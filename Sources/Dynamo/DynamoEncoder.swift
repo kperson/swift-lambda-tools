@@ -13,7 +13,10 @@ public class DynamoEncoder: Encoder {
     public let codingPath: [CodingKey]
     public let userInfo: [CodingUserInfoKey : Any] = [:]
     
-    public init(dict: UnsafeMutablePointer<[String : Any]>, codingPath: [CodingKey] = []) {
+    public init(
+        dict: UnsafeMutablePointer<[String : Any]>,
+        codingPath: [CodingKey]
+    ) {
         self.codingPath = codingPath
         self.dict = dict
     }
@@ -30,9 +33,30 @@ public class DynamoEncoder: Encoder {
         return DyanmoSingleValueEncodingContainer(dict: dict, codingPath: codingPath)
     }
     
+
+    
+}
+
+public extension DynamoEncoder {
+    
+    class func encode<T>(value: T) throws -> [String : Any] where T: Encodable {
+        var dict: [String : Any] = [:]
+        let encoder = DynamoEncoder(dict: &dict, codingPath: [])
+        try value.encode(to: encoder)
+        return encoder.dict.pointee
+    }
+
 }
 
 
+
+public extension Encodable {
+    
+    func toDynamo() throws -> [String : Any] {
+        return try DynamoEncoder.encode(value: self)
+    }
+    
+}
 
 public struct DyanmoSingleValueEncodingContainer: SingleValueEncodingContainer {
     
@@ -119,6 +143,12 @@ public struct DyanmoSingleValueEncodingContainer: SingleValueEncodingContainer {
         }
         else if newDict["S"] != nil {
             dict.pointee["S"] = newDict["S"]
+        }
+        else if newDict["BOOL"] != nil {
+            dict.pointee["BOOL"] = newDict["BOOL"]
+        }
+        else if newDict["NULL"] != nil {
+            dict.pointee["NULL"] = newDict["NULL"]
         }
         else {
             dict.pointee["M"] = newDict
@@ -262,15 +292,15 @@ public struct DyanmoKeyedEncodingContainer<K: CodingKey>: KeyedEncodingContainer
     }
     
     public mutating func nestedUnkeyedContainer(forKey key: K) -> UnkeyedEncodingContainer {
-        fatalError()
+        fatalError("THIS NEVER SEEMS TO BE CALLED, NOT SURE WHAT TO DO HERE")
     }
     
     public mutating func superEncoder() -> Encoder {
-        fatalError()
+        return DynamoEncoder(dict: dict, codingPath: codingPath)
     }
     
     public mutating func superEncoder(forKey key: K) -> Encoder {
-        fatalError()
+        fatalError("THIS NEVER SEEMS TO BE CALLED, NOT SURE WHAT TO DO HERE")
     }
     
 
@@ -453,17 +483,17 @@ public struct DynamoUnkeyedEncodingContainer: UnkeyedEncodingContainer {
     }
     
     public mutating func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
-        fatalError()
+        fatalError("THIS NEVER SEEMS TO BE CALLED, NOT SURE WHAT TO DO HERE")
     }
     
     public mutating func superEncoder() -> Encoder {
-        fatalError()
+        return DynamoEncoder(dict: dict, codingPath: codingPath)
     }
     
     public mutating func nestedContainer<NestedKey>(
         keyedBy keyType: NestedKey.Type
     ) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
-        fatalError()
+        fatalError("THIS NEVER SEEMS TO BE CALLED, NOT SURE WHAT TO DO HERE")
     }
     
 }

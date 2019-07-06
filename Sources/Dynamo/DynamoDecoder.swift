@@ -51,6 +51,23 @@ public class DynamoDecoder: Decoder {
     
 }
 
+
+public extension DynamoDecoder {
+    
+    class func decode<T>(dict: [String : Any], type: T.Type) throws -> T where T: Decodable {
+        return try T(from: DynamoDecoder(dict: dict))
+    }
+    
+}
+
+public extension Dictionary where Key == String, Value: Any {
+    
+    func fromDynamo<T>(type: T.Type) throws -> T where T: Decodable {
+        return try DynamoDecoder.decode(dict: self, type: type)
+    }
+    
+}
+
 public struct DynamoUnkeyedDecodingContainer: UnkeyedDecodingContainer  {
     
     public let codingPath: [CodingKey]

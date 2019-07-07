@@ -7,6 +7,32 @@
 
 import Foundation
 
+public struct CaseSettings {
+    
+    public let source: Case
+    public let target: Case
+    
+    public init(source: Case, target: Case) {
+        self.source = source
+        self.target = target
+    }
+    
+    
+}
+
+extension String {
+
+    func applyCaseSettings(settings: CaseSettings?) -> String {
+        if let s = settings {
+            return toCase(source: s.source, target: s.target)
+        }
+        else {
+            return self
+        }
+    }
+    
+}
+
 
 public class DynamoDecoder: Decoder {
     
@@ -14,25 +40,32 @@ public class DynamoDecoder: Decoder {
     public let userInfo: [CodingUserInfoKey : Any] = [:]
 
     let dict: [String : Any]
+    let caseSettings: CaseSettings?
 
     
-    public init(dict: [String : Any], codingPath: [CodingKey] = []) {
+    public init(
+        dict: [String : Any],
+        codingPath: [CodingKey] = [],
+        caseSettings: CaseSettings?
+    ) {
         self.dict = dict
         self.codingPath = codingPath
+        self.caseSettings = caseSettings
     }
     
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
         return KeyedDecodingContainer(
             KeyedDecodingContainerDynamoDict<Key>(
                 dict: dict,
-                codingPath: codingPath
+                codingPath: codingPath,
+                caseSettings: caseSettings
             )
         )
     }
     
     public func unkeyedContainer() throws -> UnkeyedDecodingContainer {
         if let list = dict["L"] as? [[String : Any]]  {
-            return DynamoUnkeyedDecodingContainer(arr: list, codingPath: codingPath)
+            return DynamoUnkeyedDecodingContainer(arr: list, codingPath: codingPath, caseSettings: caseSettings)
         }
         else {
             throw DecodingError.typeMismatch(
@@ -46,7 +79,11 @@ public class DynamoDecoder: Decoder {
     }
     
     public func singleValueContainer() throws -> SingleValueDecodingContainer {
-        return DynamoSingleValueDecodingContainer(dict: dict, codingPath: codingPath)
+        return DynamoSingleValueDecodingContainer(
+            dict: dict,
+            codingPath: codingPath,
+            caseSettings: caseSettings
+        )
     }
     
 }
@@ -54,16 +91,20 @@ public class DynamoDecoder: Decoder {
 
 public extension DynamoDecoder {
     
-    class func decode<T>(dict: [String : Any], type: T.Type) throws -> T where T: Decodable {
-        return try T(from: DynamoDecoder(dict: dict))
+    class func decode<T>(
+        dict: [String : Any],
+        type: T.Type,
+        caseSettings: CaseSettings? = nil
+    ) throws -> T where T: Decodable {
+        return try T(from: DynamoDecoder(dict: dict, codingPath: [], caseSettings: caseSettings))
     }
     
 }
 
 public extension Dictionary where Key == String, Value: Any {
     
-    func fromDynamo<T>(type: T.Type) throws -> T where T: Decodable {
-        return try DynamoDecoder.decode(dict: self, type: type)
+    func fromDynamo<T>(type: T.Type, caseSettings: CaseSettings? = nil) throws -> T where T: Decodable {
+        return try DynamoDecoder.decode(dict: self, type: type, caseSettings: caseSettings)
     }
     
 }
@@ -73,10 +114,16 @@ public struct DynamoUnkeyedDecodingContainer: UnkeyedDecodingContainer  {
     public let codingPath: [CodingKey]
     
     let arr: [[String : Any]]
+    let caseSettings: CaseSettings?
     
-    public init(arr: [[String : Any]], codingPath: [CodingKey]) {
+    public init(
+        arr: [[String : Any]],
+        codingPath: [CodingKey],
+        caseSettings: CaseSettings?
+    ) {
         self.arr = arr
         self.codingPath = codingPath
+        self.caseSettings = caseSettings
     }
     
     public var count: Int? {
@@ -90,91 +137,151 @@ public struct DynamoUnkeyedDecodingContainer: UnkeyedDecodingContainer  {
     public private(set) var currentIndex: Int = 0
     
     public mutating func decodeNil() throws -> Bool {
-        let x = DynamoSingleValueDecodingContainer(dict: arr[currentIndex], codingPath: codingPath).decodeNil()
+        let x = DynamoSingleValueDecodingContainer(
+            dict: arr[currentIndex],
+            codingPath: codingPath,
+            caseSettings: caseSettings
+        ).decodeNil()
         currentIndex = currentIndex + 1
         return x
     }
     
     public mutating func decode(_ type: Bool.Type) throws -> Bool {
-        let x = try DynamoSingleValueDecodingContainer(dict: arr[currentIndex], codingPath: codingPath).decode(type)
+        let x = try DynamoSingleValueDecodingContainer(
+            dict: arr[currentIndex],
+            codingPath: codingPath,
+            caseSettings: caseSettings
+        ).decode(type)
         currentIndex = currentIndex + 1
         return x
     }
     
     public mutating func decode(_ type: String.Type) throws -> String {
-        let x = try DynamoSingleValueDecodingContainer(dict: arr[currentIndex], codingPath: codingPath).decode(type)
+        let x = try DynamoSingleValueDecodingContainer(
+            dict: arr[currentIndex],
+            codingPath: codingPath,
+            caseSettings: caseSettings
+        ).decode(type)
         currentIndex = currentIndex + 1
         return x
     }
     
     public mutating func decode(_ type: Double.Type) throws -> Double {
-        let x = try DynamoSingleValueDecodingContainer(dict: arr[currentIndex], codingPath: codingPath).decode(type)
+        let x = try DynamoSingleValueDecodingContainer(
+            dict: arr[currentIndex],
+            codingPath: codingPath,
+            caseSettings: caseSettings
+        ).decode(type)
         currentIndex = currentIndex + 1
         return x
     }
     
     public mutating func decode(_ type: Float.Type) throws -> Float {
-        let x = try DynamoSingleValueDecodingContainer(dict: arr[currentIndex], codingPath: codingPath).decode(type)
+        let x = try DynamoSingleValueDecodingContainer(
+            dict: arr[currentIndex],
+            codingPath: codingPath,
+            caseSettings: caseSettings
+        ).decode(type)
         currentIndex = currentIndex + 1
         return x
     }
     
     public mutating func decode(_ type: Int.Type) throws -> Int {
-        let x = try DynamoSingleValueDecodingContainer(dict: arr[currentIndex], codingPath: codingPath).decode(type)
+        let x = try DynamoSingleValueDecodingContainer(
+            dict: arr[currentIndex],
+            codingPath: codingPath,
+            caseSettings: caseSettings
+        ).decode(type)
         currentIndex = currentIndex + 1
         return x
     }
     
     public mutating func decode(_ type: Int8.Type) throws -> Int8 {
-        let x = try DynamoSingleValueDecodingContainer(dict: arr[currentIndex], codingPath: codingPath).decode(type)
+        let x = try DynamoSingleValueDecodingContainer(
+            dict: arr[currentIndex],
+            codingPath: codingPath,
+            caseSettings: caseSettings
+        ).decode(type)
         currentIndex = currentIndex + 1
         return x
     }
     
     public mutating func decode(_ type: Int16.Type) throws -> Int16 {
-        let x = try DynamoSingleValueDecodingContainer(dict: arr[currentIndex], codingPath: codingPath).decode(type)
+        let x = try DynamoSingleValueDecodingContainer(
+            dict: arr[currentIndex],
+            codingPath: codingPath,
+            caseSettings: caseSettings
+        ).decode(type)
         currentIndex = currentIndex + 1
         return x
     }
     
     public mutating func decode(_ type: Int32.Type) throws -> Int32 {
-        let x = try DynamoSingleValueDecodingContainer(dict: arr[currentIndex], codingPath: codingPath).decode(type)
+        let x = try DynamoSingleValueDecodingContainer(
+            dict: arr[currentIndex],
+            codingPath: codingPath,
+            caseSettings: caseSettings
+        ).decode(type)
         currentIndex = currentIndex + 1
         return x
     }
     
     public mutating func decode(_ type: Int64.Type) throws -> Int64 {
-        let x = try DynamoSingleValueDecodingContainer(dict: arr[currentIndex], codingPath: codingPath).decode(type)
+        let x = try DynamoSingleValueDecodingContainer(
+            dict: arr[currentIndex],
+            codingPath: codingPath,
+            caseSettings: caseSettings
+        ).decode(type)
         currentIndex = currentIndex + 1
         return x
     }
     
     public mutating func decode(_ type: UInt.Type) throws -> UInt {
-        let x = try DynamoSingleValueDecodingContainer(dict: arr[currentIndex], codingPath: codingPath).decode(type)
+        let x = try DynamoSingleValueDecodingContainer(
+            dict: arr[currentIndex],
+            codingPath: codingPath,
+            caseSettings: caseSettings
+        ).decode(type)
         currentIndex = currentIndex + 1
         return x
     }
     
     public mutating func decode(_ type: UInt8.Type) throws -> UInt8 {
-        let x = try DynamoSingleValueDecodingContainer(dict: arr[currentIndex], codingPath: codingPath).decode(type)
+        let x = try DynamoSingleValueDecodingContainer(
+            dict: arr[currentIndex],
+            codingPath: codingPath,
+            caseSettings: caseSettings
+        ).decode(type)
         currentIndex = currentIndex + 1
         return x
     }
     
     public mutating func decode(_ type: UInt16.Type) throws -> UInt16 {
-        let x = try DynamoSingleValueDecodingContainer(dict: arr[currentIndex], codingPath: codingPath).decode(type)
+        let x = try DynamoSingleValueDecodingContainer(
+            dict: arr[currentIndex],
+            codingPath: codingPath,
+            caseSettings: caseSettings
+        ).decode(type)
         currentIndex = currentIndex + 1
         return x
     }
     
     public mutating func decode(_ type: UInt32.Type) throws -> UInt32 {
-        let x = try DynamoSingleValueDecodingContainer(dict: arr[currentIndex], codingPath: codingPath).decode(type)
+        let x = try DynamoSingleValueDecodingContainer(
+            dict: arr[currentIndex],
+            codingPath: codingPath,
+            caseSettings: caseSettings
+        ).decode(type)
         currentIndex = currentIndex + 1
         return x
     }
     
     public mutating func decode(_ type: UInt64.Type) throws -> UInt64 {
-        let x = try DynamoSingleValueDecodingContainer(dict: arr[currentIndex], codingPath: codingPath).decode(type)
+        let x = try DynamoSingleValueDecodingContainer(
+            dict: arr[currentIndex],
+            codingPath: codingPath,
+            caseSettings: caseSettings
+        ).decode(type)
         currentIndex = currentIndex + 1
         return x
     }
@@ -182,7 +289,8 @@ public struct DynamoUnkeyedDecodingContainer: UnkeyedDecodingContainer  {
     public mutating func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
         let x = try DynamoSingleValueDecodingContainer(
             dict: arr[currentIndex],
-            codingPath: codingPath
+            codingPath: codingPath,
+            caseSettings: caseSettings
         ).decode(type)
         currentIndex = currentIndex + 1
         return x
@@ -193,7 +301,8 @@ public struct DynamoUnkeyedDecodingContainer: UnkeyedDecodingContainer  {
             let x = KeyedDecodingContainer(
                 KeyedDecodingContainerDynamoDict<NestedKey>(
                     dict: mDict,
-                    codingPath: codingPath
+                    codingPath: codingPath,
+                    caseSettings: caseSettings
                 )
             )
             currentIndex = currentIndex + 1
@@ -212,7 +321,7 @@ public struct DynamoUnkeyedDecodingContainer: UnkeyedDecodingContainer  {
     
     public mutating func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
         if let list = arr[currentIndex]["L"] as? [[String : Any]]  {
-            let x = DynamoUnkeyedDecodingContainer(arr: list, codingPath: codingPath)
+            let x = DynamoUnkeyedDecodingContainer(arr: list, codingPath: codingPath, caseSettings: caseSettings)
             currentIndex = currentIndex + 1
             return x
         }
@@ -229,7 +338,7 @@ public struct DynamoUnkeyedDecodingContainer: UnkeyedDecodingContainer  {
     
     public mutating func superDecoder() throws -> Decoder {
         if let mDict = arr[currentIndex]["M"] as? [String : Any]  {
-            let x = DynamoDecoder(dict: mDict, codingPath: codingPath)
+            let x = DynamoDecoder(dict: mDict, codingPath: codingPath, caseSettings: caseSettings)
             currentIndex = currentIndex + 1
             return x
         }
@@ -253,10 +362,12 @@ public struct DynamoSingleValueDecodingContainer: SingleValueDecodingContainer {
     public let codingPath: [CodingKey]
     
     let dict: [String : Any]
+    let caseSettings: CaseSettings?
     
-    public init(dict: [String : Any], codingPath: [CodingKey]) {
+    public init(dict: [String : Any], codingPath: [CodingKey], caseSettings: CaseSettings?) {
         self.dict = dict
         self.codingPath = codingPath
+        self.caseSettings = caseSettings
     }
     
     
@@ -337,10 +448,10 @@ public struct DynamoSingleValueDecodingContainer: SingleValueDecodingContainer {
     
     public func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
         if let m = dict["M"] as? [String : Any] {
-            return try T(from: DynamoDecoder(dict: m))
+            return try T(from: DynamoDecoder(dict: m, codingPath: codingPath, caseSettings: caseSettings))
         }
         else {
-            return try T(from: DynamoDecoder(dict: dict))
+            return try T(from: DynamoDecoder(dict: dict, codingPath: codingPath, caseSettings: caseSettings))
         }
     }
     
@@ -376,26 +487,30 @@ public struct DynamoSingleValueDecodingContainer: SingleValueDecodingContainer {
 
 
 public struct KeyedDecodingContainerDynamoDict<K>: KeyedDecodingContainerProtocol where K : CodingKey {
-    
+
+    public typealias Key = K
+
     public let codingPath: [CodingKey]
+    public let dict: [String : Any]
+    
+    let caseSettings: CaseSettings?
+
+    public init(dict: [String : Any], codingPath: [CodingKey] = [], caseSettings: CaseSettings?) {
+        self.dict = dict
+        self.codingPath = codingPath
+        self.caseSettings = caseSettings
+    }
+    
     
     public var allKeys: [K] {
         return dict.keys.compactMap { Key(stringValue: $0) }
     }
     
     public func contains(_ key: K) -> Bool {
-       return  dict[key.stringValue] != nil
+        return  dict[key.stringValue] != nil
     }
     
-    public typealias Key = K
-    
-    public let dict: [String : Any]
-    
-    public init(dict: [String : Any], codingPath: [CodingKey] = []) {
-        self.dict = dict
-        self.codingPath = codingPath
-    }
-    
+
     public func decodeNil(forKey key: K) throws -> Bool {
         if let dDict = try? decodeDynamo(key: key), let b = dDict["NULL"] as? Bool {
             return b
@@ -424,12 +539,12 @@ public struct KeyedDecodingContainerDynamoDict<K>: KeyedDecodingContainerProtoco
     }
 
     public func decode<T>(_ type: T.Type, forKey key: K) throws -> T where T : Decodable {
-        if let nestedDict = dict[key.stringValue] as? [String : Any] {
+        if let nestedDict = dict[key.stringValue.applyCaseSettings(settings: caseSettings)] as? [String : Any] {
             if let m = nestedDict["M"] as? [String : Any] {
-                return try T(from: DynamoDecoder(dict: m))
+                return try T(from: DynamoDecoder(dict: m, codingPath: codingPath + [key], caseSettings: caseSettings))
             }
             else {
-                return try T(from: DynamoDecoder(dict: nestedDict))
+                return try T(from: DynamoDecoder(dict: nestedDict, codingPath: codingPath + [key], caseSettings: caseSettings))
             }
         }
         else {
@@ -442,7 +557,8 @@ public struct KeyedDecodingContainerDynamoDict<K>: KeyedDecodingContainerProtoco
         if let dDict = try? decodeDynamo(key: key) {
             return try DynamoSingleValueDecodingContainer(
                 dict: dDict,
-                codingPath: codingPath + [key]
+                codingPath: codingPath + [key],
+                caseSettings: caseSettings
             ).decodeNum(type: type)
         }
         else {
@@ -454,7 +570,8 @@ public struct KeyedDecodingContainerDynamoDict<K>: KeyedDecodingContainerProtoco
         if let dDict = try? decodeDynamo(key: key) {
             return DynamoSingleValueDecodingContainer(
                 dict: dDict,
-                codingPath: codingPath + [key]
+                codingPath: codingPath + [key],
+                caseSettings: caseSettings
             ).decodeNumOpt()
         }
         else {
@@ -568,7 +685,8 @@ public struct KeyedDecodingContainerDynamoDict<K>: KeyedDecodingContainerProtoco
             return KeyedDecodingContainer(
                 KeyedDecodingContainerDynamoDict<NestedKey>(
                     dict: map,
-                    codingPath: codingPath + [key]
+                    codingPath: codingPath + [key],
+                    caseSettings: caseSettings
                 )
             )
         }
@@ -579,9 +697,9 @@ public struct KeyedDecodingContainerDynamoDict<K>: KeyedDecodingContainerProtoco
     
     
     public func nestedUnkeyedContainer(forKey key: K) throws -> UnkeyedDecodingContainer {
-        if  let dDict = dict[key.stringValue] as? [String : Any],
+        if  let dDict = dict[key.stringValue.applyCaseSettings(settings: caseSettings)] as? [String : Any],
             let list = dDict["L"] as? [[String : Any]]  {
-            return DynamoUnkeyedDecodingContainer(arr: list, codingPath: codingPath + [key])
+            return DynamoUnkeyedDecodingContainer(arr: list, codingPath: codingPath + [key], caseSettings: caseSettings)
         }
         else {
             throw DecodingError.typeMismatch(
@@ -595,12 +713,12 @@ public struct KeyedDecodingContainerDynamoDict<K>: KeyedDecodingContainerProtoco
     }
     
     public func superDecoder() throws -> Decoder {
-        return DynamoDecoder(dict: dict)
+        return DynamoDecoder(dict: dict, codingPath: codingPath, caseSettings: caseSettings)
     }
     
     public func superDecoder(forKey key: K) throws -> Decoder {
-        if let d = dict[key.stringValue] as? [String : Any] {
-            return DynamoDecoder(dict: d)
+        if let d = dict[key.stringValue.applyCaseSettings(settings: caseSettings)] as? [String : Any] {
+            return DynamoDecoder(dict: d, codingPath: codingPath, caseSettings: caseSettings)
         }
         else {
             throw DecodingError.keyNotFound(
@@ -623,7 +741,7 @@ public struct KeyedDecodingContainerDynamoDict<K>: KeyedDecodingContainerProtoco
     }
     
     private func decodeDynamo(key: K) throws -> [String : Any]  {
-        if let dynamoDict = dict[key.stringValue] as? [String : Any] {
+        if let dynamoDict = dict[key.stringValue.applyCaseSettings(settings: caseSettings)] as? [String : Any] {
             return dynamoDict
         }
         else {

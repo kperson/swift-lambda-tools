@@ -11,7 +11,6 @@ import AWSLambdaAdapter
 
 public protocol DynamoStreamRecordMeta {
     
-    var change: ChangeCapture<[String : Any]> { get }
     var awsRegion: String { get }
     var eventSourceARN: String { get }
     var eventID: String { get }

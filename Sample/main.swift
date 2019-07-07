@@ -5,6 +5,12 @@ import SwiftAWS
 let logger = LambdaLogger()
 let awsApp = AWSApp()
 
+struct Message: Decodable {
+    
+    let myId: String
+    
+}
+
 awsApp.addSQS(name: "com.github.kperson.sqs.test") { event in
     logger.info("got SQS event: \(event)")
     return event.context.eventLoop.newSucceededFuture(result: Void())
@@ -21,8 +27,10 @@ awsApp.addCustom(name: "com.github.kperson.custom.test") { event in
 }
 
 awsApp.addDynamoStream(name: "com.github.kperson.dynamo.test") { event in
-    logger.info("got dynamo event records: \(event.records)")
+    let messages = event.fromDynamo(type: Message.self)
+    logger.info("got dynamo event records: \(messages.records)")
     return event.context.eventLoop.newSucceededFuture(result: Void())
+    
 }
 
 try? awsApp.run()

@@ -150,27 +150,39 @@ public struct DyanmoSingleValueEncodingContainer: SingleValueEncodingContainer {
         dict.pointee["N"] = NSDecimalNumber(value: value).stringValue
     }
     
+    mutating func encodeData(_ value: Data) throws {
+        dict.pointee["B"] = value.base64EncodedString()
+    }
+    
     public mutating func encode<T>(_ value: T) throws where T : Encodable {
-        var newDict: [String : Any] = [:]
-        let encoder = DynamoEncoder(dict: &newDict, codingPath: codingPath, caseSettings: caseSettings)
-        try value.encode(to: encoder)
-        if newDict["L"] != nil {
-            dict.pointee["L"] = newDict["L"]
-        }
-        else if newDict["N"] != nil {
-            dict.pointee["N"] = newDict["N"]
-        }
-        else if newDict["S"] != nil {
-            dict.pointee["S"] = newDict["S"]
-        }
-        else if newDict["BOOL"] != nil {
-            dict.pointee["BOOL"] = newDict["BOOL"]
-        }
-        else if newDict["NULL"] != nil {
-            dict.pointee["NULL"] = newDict["NULL"]
+        if let v = value as? Data {
+            try encodeData(v)
         }
         else {
-            dict.pointee["M"] = newDict
+            var newDict: [String : Any] = [:]
+            let encoder = DynamoEncoder(dict: &newDict, codingPath: codingPath, caseSettings: caseSettings)
+            try value.encode(to: encoder)
+            if newDict["L"] != nil {
+                dict.pointee["L"] = newDict["L"]
+            }
+            else if newDict["N"] != nil {
+                dict.pointee["N"] = newDict["N"]
+            }
+            else if newDict["S"] != nil {
+                dict.pointee["S"] = newDict["S"]
+            }
+            else if newDict["B"] != nil {
+                dict.pointee["B"] = newDict["B"]
+            }
+            else if newDict["BOOL"] != nil {
+                dict.pointee["BOOL"] = newDict["BOOL"]
+            }
+            else if newDict["NULL"] != nil {
+                dict.pointee["NULL"] = newDict["NULL"]
+            }
+            else {
+                dict.pointee["M"] = newDict
+            }
         }
     }
     

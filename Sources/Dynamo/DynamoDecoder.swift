@@ -61,6 +61,30 @@ public class DynamoDecoder: Decoder {
     
 }
 
+public class DataDynamoDecoder: DynamoDecoder {
+    
+    
+    override public func unkeyedContainer() throws -> UnkeyedDecodingContainer {
+        if let b = dict["B"] as? String, let data = Data(base64Encoded: b) {
+            let list = [UInt8](data).map {
+                return [
+                    "N": NSDecimalNumber(value: $0).stringValue
+                ]
+            }
+            return DynamoUnkeyedDecodingContainer(arr: list, codingPath: codingPath, caseSettings: caseSettings)
+        }
+        else {
+            throw DecodingError.typeMismatch(
+                [String : Any].self,
+                DecodingError.Context(
+                    codingPath: codingPath,
+                    debugDescription: "unable to decode using \(dict)"
+                )
+            )
+        }
+    }
+    
+}
 
 public extension DynamoDecoder {
     
@@ -423,6 +447,9 @@ public struct DynamoSingleValueDecodingContainer: SingleValueDecodingContainer {
         if let m = dict["M"] as? [String : Any] {
             return try T(from: DynamoDecoder(dict: m, codingPath: codingPath, caseSettings: caseSettings))
         }
+        else if let _ = dict["B"] as? String, type == Data.self {
+            return try T(from: DataDynamoDecoder(dict: dict, codingPath: codingPath, caseSettings: caseSettings))
+        }
         else {
             return try T(from: DynamoDecoder(dict: dict, codingPath: codingPath, caseSettings: caseSettings))
         }
@@ -515,6 +542,9 @@ public struct KeyedDecodingContainerDynamoDict<K>: KeyedDecodingContainerProtoco
         if let nestedDict = dict[key.stringValue.applyCaseSettings(settings: caseSettings)] as? [String : Any] {
             if let m = nestedDict["M"] as? [String : Any] {
                 return try T(from: DynamoDecoder(dict: m, codingPath: codingPath + [key], caseSettings: caseSettings))
+            }
+            else if let _ = nestedDict["B"] as? String, type == Data.self {
+                return try T(from: DataDynamoDecoder(dict: nestedDict, codingPath: codingPath + [key], caseSettings: caseSettings))
             }
             else {
                 return try T(from: DynamoDecoder(dict: nestedDict, codingPath: codingPath + [key], caseSettings: caseSettings))

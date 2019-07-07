@@ -113,9 +113,9 @@ class Dynamo {
 
 public extension GroupedRecords where Context == EventLoopGroup, Meta == DynamoStreamRecordMeta, Body == DynamoStreamBodyAttributes {
     
-    func fromDynamo<T>(type: T.Type) -> GroupedRecords<EventLoopGroup, DynamoStreamRecordMeta, ChangeCapture<T>> where T: Decodable {
+    func fromDynamo<T>(type: T.Type, caseSettings: CaseSettings? = nil) -> GroupedRecords<EventLoopGroup, DynamoStreamRecordMeta, ChangeCapture<T>> where T: Decodable {
         return compactMap { m in
-            m.change.map { try! $0.fromDynamo(type: type) }
+            m.change.map { try! $0.fromDynamo(type: type, caseSettings: caseSettings) }
         }
     }
 }

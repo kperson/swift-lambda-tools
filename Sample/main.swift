@@ -4,7 +4,6 @@ import SwiftAWS
 import Foundation
 
 
-
 //let logger = LambdaLogger()
 //let awsApp = AWSApp()
 //

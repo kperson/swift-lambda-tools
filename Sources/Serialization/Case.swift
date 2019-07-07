@@ -23,9 +23,6 @@ extension Case {
     }
     
     static let camelToSnakeRegex: NSRegularExpression = createCamelToSnakeRegex()
-        
-    
-    
 }
 
 public extension String {
@@ -61,6 +58,33 @@ public extension String {
                 }
             }.joined(separator: "")
         default:
+            return self
+        }
+    }
+    
+}
+
+
+public struct CaseSettings {
+    
+    public let source: Case
+    public let target: Case
+    
+    public init(source: Case, target: Case) {
+        self.source = source
+        self.target = target
+    }
+    
+    
+}
+
+extension String {
+    
+    func applyCaseSettings(settings: CaseSettings?) -> String {
+        if let s = settings {
+            return toCase(source: s.source, target: s.target)
+        }
+        else {
             return self
         }
     }

@@ -1,5 +1,5 @@
 //
-//  Dynamo.swift
+//  DynamoDecoder.swift
 //  AWSLambdaAdapter
 //
 //  Created by Kelton Person on 7/5/19.

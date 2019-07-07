@@ -8,7 +8,6 @@
 import Foundation
 import NIO
 import AWSLambdaAdapter
-import VaporLambdaAdapter
 
 
 public protocol SNSRecordMeta {

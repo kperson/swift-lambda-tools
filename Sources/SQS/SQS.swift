@@ -8,7 +8,6 @@
 import Foundation
 import AWSLambdaAdapter
 import NIO
-import VaporLambdaAdapter
 
 
 public typealias SQSHandler = (SQSPayload) -> EventLoopFuture<Void>

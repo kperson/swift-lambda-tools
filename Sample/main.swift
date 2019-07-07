@@ -20,4 +20,9 @@ awsApp.addCustom(name: "com.github.kperson.custom.test") { event in
     return event.context.eventLoop.newSucceededFuture(result: event.data)
 }
 
+awsApp.addDynamoStream(name: "com.github.kperson.dynamo.test") { event in
+    logger.info("got dynamo event records: \(event.records)")
+    return event.context.eventLoop.newSucceededFuture(result: Void())
+}
+
 try? awsApp.run()

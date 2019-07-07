@@ -28,6 +28,10 @@ public enum EventHandler {
         handler: SNSHandler
     )
     
+    case dynamoStream(
+        handler: DynamoStreamHandler
+    )
+    
     case custom(
         handler: LambdaEventHandler
     )
@@ -63,6 +67,8 @@ public class AWSApp {
                 SNS.run(handler: snsHandler)
             case .sqs(let sqsHandler):
                  SQS.run(handler: sqsHandler)
+            case .dynamoStream(let dynamoHandler):
+                Dynamo.run(handler: dynamoHandler)
             case .custom(let handler):
                 Custom.run(handler: handler)
             }
@@ -95,6 +101,10 @@ public extension AWSApp {
     
     func addSNS(name: String, handler: @escaping SNSHandler) {
         add(name: name, handler: .sns(handler: handler))
+    }
+    
+    func addDynamoStream(name: String, handler: @escaping DynamoStreamHandler) {
+        add(name: name, handler: .dynamoStream(handler: handler))
     }
     
     func addHTTPServer(

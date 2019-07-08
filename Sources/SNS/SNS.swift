@@ -75,12 +75,7 @@ public struct SNSRecord: SNSRecordMeta, SNSBodyAttributes {
         }
         
     }
-    
-    
-    
 }
-
-
 
 public typealias SNSPayload = GroupedRecords<EventLoopGroup, SNSRecordMeta, SNSBodyAttributes>
 

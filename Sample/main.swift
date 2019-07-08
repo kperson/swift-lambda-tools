@@ -32,4 +32,11 @@ awsApp.addDynamoStream(name: "com.github.kperson.dynamo.test") { e in
     return event.context.eventLoop.newSucceededFuture(result: Void())
 }
 
+awsApp.addS3(name: "com.github.kperson.s3.test") { event in
+    logger.info("got s3 event records: \(event.records)")
+    return event.context.eventLoop.newSucceededFuture(result: Void())
+}
+
 try? awsApp.run()
+
+

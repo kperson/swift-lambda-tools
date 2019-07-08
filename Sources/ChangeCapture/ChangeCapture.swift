@@ -23,3 +23,10 @@ public enum ChangeCapture<T> {
     }
     
 }
+
+public enum CreateDelete {
+    
+    case create
+    case delete
+    
+}

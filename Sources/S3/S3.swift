@@ -65,5 +65,4 @@ public struct S3Record: S3RecordMeta, S3BodyAttributes, LambdaArrayRecord {
 }
 
 public typealias S3Payload = GroupedRecords<EventLoopGroup, S3RecordMeta, S3BodyAttributes>
-
 public typealias S3Handler = (S3Payload) -> EventLoopFuture<Void>

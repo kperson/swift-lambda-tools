@@ -79,13 +79,13 @@ public class LambdaArrayRecordEventHandler<T: LambdaArrayRecord>: LambdaEventHan
     }
     
     public func handle(
-        data: [String: Any],
+        data: [String : Any],
         eventLoopGroup: EventLoopGroup
-        ) -> EventLoopFuture<[String: Any]> {
-        if let records = data["Records"] as? [[String: Any]] {
-            let transformedRecords: [Record<T.Meta, T.Body>] = records
-                .compactMap {  T(dict: $0) }
-                .map { r in Record<T.Meta, T.Body>(meta: r.recordMeta, body: r.recordBody) }
+    ) -> EventLoopFuture<[String : Any]> {
+        if let records = data["Records"] as? [[String : Any]] {
+            let transformedRecords = records
+                .compactMap { T(dict: $0) }
+                .map { r in Record(meta: r.recordMeta, body: r.recordBody) }
             
             let grouped = GroupedRecords(context: eventLoopGroup, records: transformedRecords)
             return handler(grouped).map { _ in [:] }

@@ -4,12 +4,10 @@ import PackageDescription
 let package = Package(
     name: "swift-aws",
     products: [
-        .library(name: "SwiftAWS", targets: ["SwiftAWS"]),
-        .library(name: "Sample", targets: ["Sample"])
+        .library(name: "SwiftAWS", targets: ["SwiftAWS"])
     ],
     dependencies: [
-        .package(url: "https://github.com/kperson/vapor-lambda-adapter.git", .branch("master")),
-        .package(url: "https://github.com/swift-aws/aws-sdk-swift.git", .upToNextMinor(from: "3.0.0"))
+        .package(url: "https://github.com/kperson/vapor-lambda-adapter.git", .branch("master"))
     ],
     targets: [
         .target(
@@ -22,8 +20,7 @@ let package = Package(
         .target(
             name: "Sample",
             dependencies: [
-                "SwiftAWS",
-                "DynamoDB"
+                "SwiftAWS"
             ],
             path: "./Sample"
         ),

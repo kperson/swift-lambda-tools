@@ -18,6 +18,13 @@ let package = Package(
                 "DynamoDB"
             ],
             path: "./Sources"
+        ),
+        .testTarget(
+            name: "SampleTests",
+            dependencies: [
+                "Sample"
+            ],
+            path: "./Tests"
         )
     ]
 )

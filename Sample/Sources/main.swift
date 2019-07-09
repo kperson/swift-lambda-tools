@@ -1,5 +1,6 @@
 import VaporLambdaAdapter
 import SwiftAWS
+import Foundation
 
 
 let logger = LambdaLogger()
@@ -7,7 +8,7 @@ let awsApp = AWSApp()
 
 struct Message: Decodable {
     
-    let myId: Stringa
+    let myId: String
     
 }
 

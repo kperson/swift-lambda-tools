@@ -57,3 +57,41 @@ public struct ContextData<C, D> {
     }
     
 }
+
+
+public protocol LambdaArrayRecord {
+    
+    associatedtype Meta
+    associatedtype Body
+    
+    init?(dict: [String : Any])
+    
+    var recordMeta: Meta { get }
+    var recordBody: Body { get }
+}
+
+public class LambdaArrayRecordEventHandler<T: LambdaArrayRecord>: LambdaEventHandler {
+    
+    let handler: (GroupedRecords<EventLoopGroup, T.Meta, T.Body>) -> EventLoopFuture<Void>
+
+    public init(handler: @escaping (GroupedRecords<EventLoopGroup, T.Meta, T.Body>) -> EventLoopFuture<Void>) {
+        self.handler = handler
+    }
+    
+    public func handle(
+        data: [String: Any],
+        eventLoopGroup: EventLoopGroup
+        ) -> EventLoopFuture<[String: Any]> {
+        if let records = data["Records"] as? [[String: Any]] {
+            let transformedRecords: [Record<T.Meta, T.Body>] = records
+                .compactMap {  T(dict: $0) }
+                .map { r in Record<T.Meta, T.Body>(meta: r.recordMeta, body: r.recordBody) }
+            
+            let grouped = GroupedRecords(context: eventLoopGroup, records: transformedRecords)
+            return handler(grouped).map { _ in [:] }
+        }
+        else {
+            return eventLoopGroup.eventLoop.newSucceededFuture(result: [:])
+        }
+    }
+}

@@ -9,11 +9,8 @@ import Foundation
 import AWSLambdaAdapter
 import NIO
 
-
-public typealias SQSHandler = (SQSPayload) -> EventLoopFuture<Void>
-
-
 public struct SQSMessageAttributeValue {
+    
     let binaryListValues: [Data]
     let binaryValue: Data?
     
@@ -84,7 +81,10 @@ public protocol SQSBodyAttributes {
 
 }
 
-public struct SQSRecord: SQSRecordMeta, SQSBodyAttributes {
+public struct SQSRecord: SQSRecordMeta, SQSBodyAttributes, LambdaArrayRecord {
+    
+    public typealias Meta = SQSRecordMeta
+    public typealias Body = SQSBodyAttributes
 
     public let body: String
     public let awsRegion: String
@@ -143,6 +143,11 @@ public struct SQSRecord: SQSRecordMeta, SQSBodyAttributes {
         }
     }
     
+    public var recordMeta: SQSRecordMeta { return self }
+    public var recordBody: SQSBodyAttributes { return self }
+
+    
+    
     static func extractRootKey(dict: [String : Any], key: String) -> String? {
         return dict[key] as? String
     }
@@ -159,43 +164,5 @@ public struct SQSRecord: SQSRecordMeta, SQSBodyAttributes {
     
 }
 
-
-
-
+public typealias SQSHandler = (SQSPayload) -> EventLoopFuture<Void>
 public typealias SQSPayload = GroupedRecords<EventLoopGroup, SQSRecordMeta, SQSBodyAttributes>
-
-
-class SQS {
-    
-    class func run(handler: @escaping SQSHandler) {
-        Custom.run(handler: SQSLambdaEventHandler(handler: handler))
-    }
-    
-}
-
-
-class SQSLambdaEventHandler: LambdaEventHandler {
-    
-    let handler: SQSHandler
-    
-    init(handler: @escaping SQSHandler) {
-        self.handler = handler
-    }
-    
-    func handle(
-        data: [String: Any],
-        eventLoopGroup: EventLoopGroup
-    ) -> EventLoopFuture<[String: Any]> {
-        if let records = data["Records"] as? [[String: Any]] {
-            let sqsRecords = records
-                .compactMap { SQSRecord(dict: $0) }
-                .map { r in Record<SQSRecordMeta, SQSBodyAttributes>(meta: r, body: r) }
-            
-            let grouped: SQSPayload = GroupedRecords(context: eventLoopGroup, records: sqsRecords)
-            return handler(grouped).map { _ in [:] }
-        }
-        else {
-            return eventLoopGroup.eventLoop.newSucceededFuture(result: [:])
-        }
-    }
-}

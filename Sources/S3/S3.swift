@@ -23,7 +23,10 @@ public protocol S3BodyAttributes {
     var key: String { get }
 }
 
-public struct S3Record: S3RecordMeta, S3BodyAttributes {
+public struct S3Record: S3RecordMeta, S3BodyAttributes, LambdaArrayRecord {
+    
+    public typealias Meta = S3RecordMeta
+    public typealias Body = S3BodyAttributes
     
     public let action: CreateDelete
     public let bucket: String
@@ -31,7 +34,7 @@ public struct S3Record: S3RecordMeta, S3BodyAttributes {
     public let eventSource: String
     public let eventTime: Date
     
-    init?(dict: [String : Any]) {
+    public init?(dict: [String : Any]) {
         if
             let eventName = dict["eventName"] as? String,
             let s3 = dict["s3"] as? [String : Any],
@@ -55,45 +58,12 @@ public struct S3Record: S3RecordMeta, S3BodyAttributes {
         }
         
     }
+    
+    public var recordMeta: S3RecordMeta { return self }
+    public var recordBody: S3BodyAttributes { return self }
 
 }
 
 public typealias S3Payload = GroupedRecords<EventLoopGroup, S3RecordMeta, S3BodyAttributes>
 
 public typealias S3Handler = (S3Payload) -> EventLoopFuture<Void>
-
-class S3LambdaEventHandler: LambdaEventHandler {
-    
-    let handler: S3Handler
-    
-    init(handler: @escaping S3Handler) {
-        self.handler = handler
-    }
-    
-    func handle(
-        data: [String: Any],
-        eventLoopGroup: EventLoopGroup
-        ) -> EventLoopFuture<[String: Any]> {
-        if let records = data["Records"] as? [[String: Any]] {
-            let s3Records = records
-                .compactMap { S3Record(dict: $0) }
-                .map { r in Record<S3RecordMeta, S3BodyAttributes>(meta: r, body: r) }
-            
-            let grouped: S3Payload = GroupedRecords(context: eventLoopGroup, records: s3Records)
-            return handler(grouped).map { _ in [:] }
-        }
-        else {
-            return eventLoopGroup.eventLoop.newSucceededFuture(result: [:])
-        }
-    }
-}
-
-
-class S3 {
-    
-    class func run(handler: @escaping S3Handler) {
-        Custom.run(handler: S3LambdaEventHandler(handler: handler))
-    }
-    
-}
-

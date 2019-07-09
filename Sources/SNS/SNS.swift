@@ -28,7 +28,10 @@ public protocol SNSBodyAttributes {
     
 }
 
-public struct SNSRecord: SNSRecordMeta, SNSBodyAttributes {
+public struct SNSRecord: SNSRecordMeta, SNSBodyAttributes, LambdaArrayRecord {
+    
+    public typealias Meta = SNSRecordMeta
+    public typealias Body = SNSBodyAttributes
     
     static func createDateFormatter() -> DateFormatter {
         let dateFormatter = DateFormatter()
@@ -73,45 +76,13 @@ public struct SNSRecord: SNSRecordMeta, SNSBodyAttributes {
         else {
             return nil
         }
-        
     }
+    
+    public var recordMeta: SNSRecordMeta { return self }
+    public var recordBody: SNSBodyAttributes { return self }
+
 }
 
 public typealias SNSPayload = GroupedRecords<EventLoopGroup, SNSRecordMeta, SNSBodyAttributes>
 
 public typealias SNSHandler = (SNSPayload) -> EventLoopFuture<Void>
-
-class SNSLambdaEventHandler: LambdaEventHandler {
-    
-    let handler: SNSHandler
-    
-    init(handler: @escaping SNSHandler) {
-        self.handler = handler
-    }
-    
-    func handle(
-        data: [String: Any],
-        eventLoopGroup: EventLoopGroup
-    ) -> EventLoopFuture<[String: Any]> {
-        if let records = data["Records"] as? [[String: Any]] {
-            let snsRecords = records
-                .compactMap { SNSRecord(dict: $0) }
-                .map { r in Record<SNSRecordMeta, SNSBodyAttributes>(meta: r, body: r) }
-            
-            let grouped: SNSPayload = GroupedRecords(context: eventLoopGroup, records: snsRecords)
-            return handler(grouped).map { _ in [:] }
-        }
-        else {
-            return eventLoopGroup.eventLoop.newSucceededFuture(result: [:])
-        }
-    }
-}
-
-
-class SNS {
-    
-    class func run(handler: @escaping SNSHandler) {
-        Custom.run(handler: SNSLambdaEventHandler(handler: handler))
-    }
-    
-}

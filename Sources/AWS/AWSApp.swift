@@ -68,13 +68,13 @@ public class AWSApp {
                     handler: httpHandler
                 )
             case .sns(handler: let snsHandler):
-                SNS.run(handler: snsHandler)
+                Custom.run(handler: LambdaArrayRecordEventHandler<SNSRecord>(handler: snsHandler))
             case .sqs(let sqsHandler):
-                 SQS.run(handler: sqsHandler)
+                Custom.run(handler: LambdaArrayRecordEventHandler<SQSRecord>(handler: sqsHandler))
             case .dynamoStream(let dynamoHandler):
-                Dynamo.run(handler: dynamoHandler)
+                Custom.run(handler: LambdaArrayRecordEventHandler<DynamoStreamRecord>(handler: dynamoHandler))
             case .s3(let s3Handler):
-                S3.run(handler: s3Handler)
+                Custom.run(handler: LambdaArrayRecordEventHandler<S3Record>(handler: s3Handler))
             case .custom(let handler):
                 Custom.run(handler: handler)
             }

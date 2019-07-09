@@ -24,7 +24,10 @@ public protocol DynamoStreamBodyAttributes {
     
 }
 
-public struct DynamoStreamRecord: DynamoStreamRecordMeta, DynamoStreamBodyAttributes {
+public struct DynamoStreamRecord: DynamoStreamRecordMeta, DynamoStreamBodyAttributes, LambdaArrayRecord {
+    
+    public typealias Meta = DynamoStreamRecordMeta
+    public typealias Body = DynamoStreamBodyAttributes
     
     public let change: ChangeCapture<[String : Any]>
     public let awsRegion: String
@@ -65,50 +68,13 @@ public struct DynamoStreamRecord: DynamoStreamRecordMeta, DynamoStreamBodyAttrib
         
     }
     
-    
+    public var recordMeta: DynamoStreamRecordMeta { return self }
+    public var recordBody: DynamoStreamBodyAttributes { return self }
     
 }
-
-
 
 public typealias DynamoStreamPayload = GroupedRecords<EventLoopGroup, DynamoStreamRecordMeta, DynamoStreamBodyAttributes>
-
 public typealias DynamoStreamHandler = (DynamoStreamPayload) -> EventLoopFuture<Void>
-
-class DynamoStreamLambdaEventHandler: LambdaEventHandler {
-
-    let handler: DynamoStreamHandler
-
-    init(handler: @escaping DynamoStreamHandler) {
-        self.handler = handler
-    }
-
-    func handle(
-        data: [String: Any],
-        eventLoopGroup: EventLoopGroup
-    ) -> EventLoopFuture<[String: Any]> {
-        if let records = data["Records"] as? [[String: Any]] {
-            let dynamoRecords = records
-                .compactMap { DynamoStreamRecord(dict: $0) }
-                .map { r in Record<DynamoStreamRecordMeta, DynamoStreamBodyAttributes>(meta: r, body: r) }
-
-            let grouped: DynamoStreamPayload = GroupedRecords(context: eventLoopGroup, records: dynamoRecords)
-            return handler(grouped).map { _ in [:] }
-        }
-        else {
-            return eventLoopGroup.eventLoop.newSucceededFuture(result: [:])
-        }
-    }
-}
-
-
-class Dynamo {
-
-    class func run(handler: @escaping DynamoStreamHandler) {
-        Custom.run(handler: DynamoStreamLambdaEventHandler(handler: handler))
-    }
-
-}
 
 
 public extension GroupedRecords where Context == EventLoopGroup, Meta == DynamoStreamRecordMeta, Body == DynamoStreamBodyAttributes {

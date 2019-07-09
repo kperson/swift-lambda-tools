@@ -17,13 +17,6 @@ let package = Package(
             ],
             path: "./Sources"
         ),
-        .target(
-            name: "Sample",
-            dependencies: [
-                "SwiftAWS"
-            ],
-            path: "./Sample"
-        ),
         .testTarget(
             name: "SwiftAWSTests",
             dependencies: [

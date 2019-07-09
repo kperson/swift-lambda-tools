@@ -7,7 +7,7 @@ let awsApp = AWSApp()
 
 struct Message: Decodable {
     
-    let myId: String
+    let myId: Stringa
     
 }
 

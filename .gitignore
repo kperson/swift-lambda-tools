@@ -2,3 +2,6 @@
 *.xcodeproj/
 .DS_Store
 Package.resolved
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup

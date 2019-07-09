@@ -26,7 +26,7 @@ data "template_file" "build_script" {
 
   vars = {
     tag         = "${random_string.tag.result}"
-    docker_file = "${var.docker_file == "NA" ? "${path.module}/Dockerfile" : var.docker_file}"
+    docker_file = "${var.docker_file == "NA" ? "Build/${path.module}/Dockerfile" : var.docker_file}"
   }
 }
 

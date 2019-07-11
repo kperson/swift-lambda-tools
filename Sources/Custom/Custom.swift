@@ -83,6 +83,8 @@ public class LambdaArrayRecordEventHandler<T: LambdaArrayRecord>: LambdaEventHan
         eventLoopGroup: EventLoopGroup
     ) -> EventLoopFuture<[String : Any]> {
         if let records = data["Records"] as? [[String : Any]] {
+            let l = LambdaLogger()
+            l.info(records.description)
             let transformedRecords = records
                 .compactMap { T(dict: $0) }
                 .map { r in Record(meta: r.recordMeta, body: r.recordBody) }

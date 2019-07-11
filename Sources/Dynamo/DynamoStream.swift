@@ -38,11 +38,11 @@ public struct DynamoStreamRecord: DynamoStreamRecordMeta, DynamoStreamBodyAttrib
     public init?(dict: [String : Any]) {
         if
             let eventName = dict["eventName"] as? String,
-            let dynamodb = dict["dynamodb"] as? [String : Any],
-            let eventSourceARN = dynamodb["eventSourceARN"] as? String,
-            let awsRegion = dynamodb["awsRegion"] as? String,
-            let eventID = dynamodb["eventID"] as? String,
-            let eventSource = dynamodb["eventSource"] as? String
+            let eventSourceARN = dict["eventSourceARN"] as? String,
+            let awsRegion = dict["awsRegion"] as? String,
+            let eventID = dict["eventID"] as? String,
+            let eventSource = dict["eventSource"] as? String,
+            let dynamodb = dict["dynamodb"] as? [String : Any]
         {
             self.eventSourceARN = eventSourceARN
             self.awsRegion = awsRegion

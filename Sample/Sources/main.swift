@@ -38,5 +38,3 @@ awsApp.addS3(name: "com.github.kperson.s3.test") { event in
 }
 
 try? awsApp.run()
-
-

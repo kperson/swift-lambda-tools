@@ -16,6 +16,7 @@ public class Custom {
         let dispatcher = LambdaEventDispatcher(handler: handler)
         let logger = LambdaLogger()
         do {
+            logger.info("starting custom handler")
             try dispatcher.start().wait()
         }
         catch let error {
@@ -73,6 +74,8 @@ public protocol LambdaArrayRecord {
 public class LambdaArrayRecordEventHandler<T: LambdaArrayRecord>: LambdaEventHandler {
     
     let handler: (GroupedRecords<EventLoopGroup, T.Meta, T.Body>) -> EventLoopFuture<Void>
+    let l = LambdaLogger()
+
 
     public init(handler: @escaping (GroupedRecords<EventLoopGroup, T.Meta, T.Body>) -> EventLoopFuture<Void>) {
         self.handler = handler
@@ -84,7 +87,6 @@ public class LambdaArrayRecordEventHandler<T: LambdaArrayRecord>: LambdaEventHan
     ) -> EventLoopFuture<[String : Any]> {
         if let records = data["Records"] as? [[String : Any]] {
             
-            let l = LambdaLogger()
             l.info(records.description)
             
             let transformedRecords = records

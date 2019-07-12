@@ -373,7 +373,7 @@ public struct DynamoSingleValueDecodingContainer: SingleValueDecodingContainer {
             return b
         }
         else {
-            return true
+            return false
         }
     }
     
@@ -514,6 +514,9 @@ public struct KeyedDecodingContainerDynamoDict<K>: KeyedDecodingContainerProtoco
     public func decodeNil(forKey key: K) throws -> Bool {
         if let dDict = try? decodeDynamo(key: key), let b = dDict["NULL"] as? Bool {
             return b
+        }
+        else if contains(key) {
+            return false
         }
         else {
             return true

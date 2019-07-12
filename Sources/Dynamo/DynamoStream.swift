@@ -34,6 +34,7 @@ public struct DynamoStreamRecord: DynamoStreamRecordMeta, DynamoStreamBodyAttrib
     public let eventSourceARN: String
     public let eventID: String
     public let eventSource: String
+    public let approximateCreationDateTime: Date
     
     public init?(dict: [String : Any]) {
         if
@@ -42,8 +43,10 @@ public struct DynamoStreamRecord: DynamoStreamRecordMeta, DynamoStreamBodyAttrib
             let awsRegion = dict["awsRegion"] as? String,
             let eventID = dict["eventID"] as? String,
             let eventSource = dict["eventSource"] as? String,
-            let dynamodb = dict["dynamodb"] as? [String : Any]
+            let dynamodb = dict["dynamodb"] as? [String : Any],
+            let approximateCreationDateTimeDouble = dynamodb["ApproximateCreationDateTime"] as? Double
         {
+            self.approximateCreationDateTime = Date(timeIntervalSince1970: approximateCreationDateTimeDouble)
             self.eventSourceARN = eventSourceARN
             self.awsRegion = awsRegion
             self.eventID = eventID
@@ -78,15 +81,12 @@ public typealias DynamoStreamHandler = (DynamoStreamPayload) -> EventLoopFuture<
 
 
 
-public extension GroupedRecords where
-    Context == EventLoopGroup,
-    Meta == DynamoStreamRecordMeta,
-    Body == DynamoStreamBodyAttributes {
+public extension GroupedRecords where Body == DynamoStreamBodyAttributes {
     
     func fromDynamo<T>(
         type: T.Type,
         caseSettings: CaseSettings? = nil
-    ) -> GroupedRecords<EventLoopGroup, DynamoStreamRecordMeta, ChangeCapture<T>> where T: Decodable {
+    ) -> GroupedRecords<Context, Meta, ChangeCapture<T>> where T: Decodable {
         return compactMap { m in
             m.change.map { try! $0.fromDynamo(type: type, caseSettings: caseSettings) }
         }

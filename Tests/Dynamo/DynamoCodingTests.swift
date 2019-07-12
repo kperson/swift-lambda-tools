@@ -72,6 +72,8 @@ struct Person: Codable, Equatable {
     
     let favoriteAnimal: Animal
     let secondFavoriteAnimal: Animal?
+    let thirdFavoriteAnimal: Animal?
+
     let allergies: [Allergy]
     
     static func == (lhs: Person, rhs: Person) -> Bool {
@@ -97,6 +99,7 @@ class DynamoCodingTests: XCTestCase {
             age: 45,
             favoriteAnimal: .cat,
             secondFavoriteAnimal: .other(name: "meerkat"),
+            thirdFavoriteAnimal: nil,
             allergies: [
                 Person.Allergy(name: "pollen", category: "nature", severity: .medium),
                 Person.Allergy(name: "peanuts", category: "food", severity: .high)
@@ -225,6 +228,7 @@ class DynamoCodingTests: XCTestCase {
             age: 45,
             favoriteAnimal: .cat,
             secondFavoriteAnimal: .other(name: "meerkat"),
+            thirdFavoriteAnimal: nil,
             allergies: [
                 Person.Allergy(name: "pollen", category: "nature", severity: .medium),
                 Person.Allergy(name: "peanuts", category: "food", severity: .high)

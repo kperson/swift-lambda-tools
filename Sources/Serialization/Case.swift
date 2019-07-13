@@ -75,6 +75,10 @@ public struct CaseSettings {
         self.target = target
     }
     
+    public var reverse: CaseSettings {
+        return CaseSettings(source: target, target: source)
+    }
+    
     
 }
 

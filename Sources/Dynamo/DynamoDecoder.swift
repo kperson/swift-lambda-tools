@@ -503,7 +503,7 @@ public struct KeyedDecodingContainerDynamoDict<K>: KeyedDecodingContainerProtoco
     
     
     public var allKeys: [K] {
-        return dict.keys.compactMap { Key(stringValue: $0) }
+        return dict.keys.compactMap { Key(stringValue: $0.applyCaseSettings(settings: caseSettings?.reverse)) }
     }
     
     public func contains(_ key: K) -> Bool {

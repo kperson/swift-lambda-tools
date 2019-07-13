@@ -507,7 +507,7 @@ public struct KeyedDecodingContainerDynamoDict<K>: KeyedDecodingContainerProtoco
     }
     
     public func contains(_ key: K) -> Bool {
-        return  dict[key.stringValue] != nil
+        return  dict[key.stringValue.applyCaseSettings(settings: caseSettings)] != nil
     }
     
 

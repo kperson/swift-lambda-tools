@@ -91,22 +91,22 @@ struct Person: Codable, Equatable {
 
 
 class DynamoCodingTests: XCTestCase {
+    
+    let person = Person(
+        firstName: "Jane",
+        lastName: "Smith",
+        age: 45,
+        favoriteAnimal: .cat,
+        secondFavoriteAnimal: .other(name: "meerkat"),
+        thirdFavoriteAnimal: nil,
+        allergies: [
+            Person.Allergy(name: "pollen", category: "nature", severity: .medium),
+            Person.Allergy(name: "peanuts", category: "food", severity: .high)
+        ]
+    )
 
     func testEncode() {
-        let p = Person(
-            firstName: "Jane",
-            lastName: "Smith",
-            age: 45,
-            favoriteAnimal: .cat,
-            secondFavoriteAnimal: .other(name: "meerkat"),
-            thirdFavoriteAnimal: nil,
-            allergies: [
-                Person.Allergy(name: "pollen", category: "nature", severity: .medium),
-                Person.Allergy(name: "peanuts", category: "food", severity: .high)
-            ]
-        )
-        
-        let dynamoDict = try! p.toDynamo()
+        let dynamoDict = try! person.toDynamo()
         let expectedDict: [String : Any] = [
             "firstName": [
                 "S": "Jane"
@@ -222,21 +222,257 @@ class DynamoCodingTests: XCTestCase {
             ]
         ]
         
-        let expectedPerson = Person(
-            firstName: "Jane",
-            lastName: "Smith",
-            age: 45,
-            favoriteAnimal: .cat,
-            secondFavoriteAnimal: .other(name: "meerkat"),
-            thirdFavoriteAnimal: nil,
-            allergies: [
-                Person.Allergy(name: "pollen", category: "nature", severity: .medium),
-                Person.Allergy(name: "peanuts", category: "food", severity: .high)
+        let serialPerson = try! dict.fromDynamo(type: Person.self)
+        XCTAssertEqual(person, serialPerson)
+    }
+    
+    func testEncodeSnake() {
+        let dynamoDict = try! person.toDynamo(caseSettings: .init(source: .camel, target: .snake))
+        let expectedDict: [String : Any] = [
+            "first_name": [
+                "S": "Jane"
+            ],
+            "favorite_animal": [
+                "M": [
+                    "raw_value": [
+                        "S": "cat"
+                    ]
+                ]
+            ],
+            "age": [
+                "N": "45"
+            ],
+            "last_name": [
+                "S": "Smith"
+            ],
+            "second_favorite_animal": [
+                "M": [
+                    "raw_value": [
+                        "S": "meerkat"
+                    ]
+                ]
+            ],
+            "allergies": [
+                "L": [
+                    [
+                        "M": [
+                            "name": [
+                                "S": "pollen"
+                            ],
+                            "category": [
+                                "S": "nature"
+                            ],
+                            "severity": [
+                                "S": "medium"
+                            ]
+                        ]
+                    ],
+                    [
+                        "M": [
+                            "name": [
+                                "S": "peanuts"
+                            ],
+                            "category": [
+                                "S": "food"
+                            ],
+                            "severity": [
+                                "S": "high"
+                            ]
+                        ]
+                    ]
+                ]
             ]
-        )
+        ]
+        XCTAssertEqual(dynamoDict as NSObject, expectedDict as NSObject)
+    }
+    
+    func testDecodeSnake() {
+        let dict: [String : Any] = [
+            "first_name": [
+                "S": "Jane"
+            ],
+            "favorite_animal": [
+                "M": [
+                    "raw_value": [
+                        "S": "cat"
+                    ]
+                ]
+            ],
+            "age": [
+                "N": "45"
+            ],
+            "last_name": [
+                "S": "Smith"
+            ],
+            "second_favorite_animal": [
+                "M": [
+                    "raw_value": [
+                        "S": "meerkat"
+                    ]
+                ]
+            ],
+            "allergies": [
+                "L": [
+                    [
+                        "M": [
+                            "name": [
+                                "S": "pollen"
+                            ],
+                            "category": [
+                                "S": "nature"
+                            ],
+                            "severity": [
+                                "S": "medium"
+                            ]
+                        ]
+                    ],
+                    [
+                        "M": [
+                            "name": [
+                                "S": "peanuts"
+                            ],
+                            "category": [
+                                "S": "food"
+                            ],
+                            "severity": [
+                                "S": "high"
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
         
-        let person = try! dict.fromDynamo(type: Person.self)
-        XCTAssertEqual(person, expectedPerson)
+        let serialPerson = try! dict.fromDynamo(
+            type: Person.self,
+            caseSettings: .init(source: .camel, target: .snake)
+        )
+        XCTAssertEqual(person, serialPerson)
+    }
+    
+    
+    func testEncodePascal() {
+        let dynamoDict = try! person.toDynamo(caseSettings: .init(source: .camel, target: .pascal))
+        let expectedDict: [String : Any] = [
+            "FirstName": [
+                "S": "Jane"
+            ],
+            "FavoriteAnimal": [
+                "M": [
+                    "RawValue": [
+                        "S": "cat"
+                    ]
+                ]
+            ],
+            "Age": [
+                "N": "45"
+            ],
+            "LastName": [
+                "S": "Smith"
+            ],
+            "SecondFavoriteAnimal": [
+                "M": [
+                    "RawValue": [
+                        "S": "meerkat"
+                    ]
+                ]
+            ],
+            "Allergies": [
+                "L": [
+                    [
+                        "M": [
+                            "Name": [
+                                "S": "pollen"
+                            ],
+                            "Category": [
+                                "S": "nature"
+                            ],
+                            "Severity": [
+                                "S": "medium"
+                            ]
+                        ]
+                    ],
+                    [
+                        "M": [
+                            "Name": [
+                                "S": "peanuts"
+                            ],
+                            "Category": [
+                                "S": "food"
+                            ],
+                            "Severity": [
+                                "S": "high"
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+        XCTAssertEqual(dynamoDict as NSObject, expectedDict as NSObject)
+    }
+
+    func testDecodePascal() {
+        let dict: [String : Any] = [
+            "FirstName": [
+                "S": "Jane"
+            ],
+            "FavoriteAnimal": [
+                "M": [
+                    "RawValue": [
+                        "S": "cat"
+                    ]
+                ]
+            ],
+            "Age": [
+                "N": "45"
+            ],
+            "LastName": [
+                "S": "Smith"
+            ],
+            "SecondFavoriteAnimal": [
+                "M": [
+                    "RawValue": [
+                        "S": "meerkat"
+                    ]
+                ]
+            ],
+            "Allergies": [
+                "L": [
+                    [
+                        "M": [
+                            "Name": [
+                                "S": "pollen"
+                            ],
+                            "Category": [
+                                "S": "nature"
+                            ],
+                            "Severity": [
+                                "S": "medium"
+                            ]
+                        ]
+                    ],
+                    [
+                        "M": [
+                            "Name": [
+                                "S": "peanuts"
+                            ],
+                            "Category": [
+                                "S": "food"
+                            ],
+                            "Severity": [
+                                "S": "high"
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+
+        let serialPerson = try! dict.fromDynamo(
+            type: Person.self,
+            caseSettings: .init(source: .camel, target: .pascal)
+        )
+        XCTAssertEqual(person, serialPerson)
     }
     
 }

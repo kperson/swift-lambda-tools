@@ -6,13 +6,14 @@ import Foundation
 let logger = LambdaLogger()
 let awsApp = AWSApp()
 
-struct Message: Decodable {
+struct Pet: Decodable {
     
-    let myId: String
+    let userId: String
+    let pet: String
     
 }
 
-awsApp.addSQS(name: "com.github.kperson.sqs.test") { event in
+awsApp.addSQS(name: "com.github.kperson.sqs.pet") { event in
     logger.info("got SQS event: \(event)")
     return event.context.eventLoop.newSucceededFuture(result: Void())
 }
@@ -27,8 +28,9 @@ awsApp.addCustom(name: "com.github.kperson.custom.test") { event in
     return event.context.eventLoop.newSucceededFuture(result: event.data)
 }
 
-awsApp.addDynamoStream(name: "com.github.kperson.dynamo.test") { event in
-    logger.info("got dynamo event: \(event)")
+awsApp.addDynamoStream(name: "com.github.kperson.dynamo.pet") { event in
+    let pets = event.fromDynamo(type: Pet.self).records
+    logger.info("got dynamo change pet events: \(pets)")
     return event.context.eventLoop.newSucceededFuture(result: Void())
 }
 

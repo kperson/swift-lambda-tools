@@ -44,19 +44,22 @@ if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
 
     awsApp.addDynamoStream(name: "com.github.kperson.dynamo.pet") { event in
         //send an event to a queue every time a pet is created
-        let petEvents = event.fromDynamo(type: Pet.self).records
-        let futures = try! petEvents.compactMap { change in
-            switch change.body {
-            case .create(new: let new):
-                return SQS.SendMessageRequest(messageBody: JSONEncoder().asString(item: new), queueUrl: queueUrl)
-            default:
-                return nil
-            }
-        }.map(sqs.sendMessage)
-        
-        return EventLoopFuture
-            .whenAll(futures, eventLoop: event.context.eventLoop)
-            .map { _ in Void() }
+        let createEvents = ChangeCapture.creates (
+            items: event.fromDynamo(type: Pet.self).records.map { $0.body }
+        )
+
+//        let futures = try! petEvents.
+//            switch change.body {
+//            case .create(new: let new):
+//                return SQS.SendMessageRequest(messageBody: JSONEncoder().asString(item: new), queueUrl: queueUrl)
+//            default:
+//                return nil
+//            }
+//        }.map(sqs.sendMessage)
+//
+//        return EventLoopFuture
+//            .whenAll(futures, eventLoop: event.context.eventLoop)
+//            .map { _ in Void() }
     }
 
     awsApp.addS3(name: "com.github.kperson.s3.test") { event in

@@ -15,6 +15,7 @@ let package = Package(
             name: "Sample",
             dependencies: [
                 "SwiftAWS",
+                "SQS",
                 "DynamoDB"
             ],
             path: "./Sources"

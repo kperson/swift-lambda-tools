@@ -1,10 +1,12 @@
 resource "aws_sqs_queue" "pet" {
-  name = "swift_demo_pet"
+  name                       = "swift_demo_pet"
+  visibility_timeout_seconds = "180"
 }
 data "aws_iam_policy_document" "sqs_pet" {
+
   statement {
     actions = [
-      "sqs.*"
+      "sqs:*"
     ]
     resources = [
       "${aws_sqs_queue.pet.arn}",
@@ -31,5 +33,18 @@ data "template_file" "sqs_pet_arn" {
 
   vars = {
     id = "${aws_sqs_queue.pet.arn}"
+  }
+}
+
+
+
+data "template_file" "sqs_pet_id" {
+  depends_on = [
+    "aws_iam_role_policy_attachment.sqs_pet"
+  ]
+  template = "$${id}"
+
+  vars = {
+    id = "${aws_sqs_queue.pet.id}"
   }
 }

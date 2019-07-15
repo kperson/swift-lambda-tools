@@ -24,8 +24,21 @@ extension JSONEncoder {
     
 }
 
+public extension ChangeCapture {
+    
+    static func creates2<E>(_ items: [ChangeCapture<E>]) -> [E] {
+        return items.compactMap { i in
+            switch i {
+            case .create(new: let n): return n
+            default: return nil
+            }
+        }
+    }
+}
+
+let sqs = SQS(accessKeyId: nil, secretAccessKey: nil, region: nil, endpoint: nil)
+
 if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
-    let sqs = SQS(accessKeyId: nil, secretAccessKey: nil, region: nil, endpoint: nil)
 
     awsApp.addSQS(name: "com.github.kperson.sqs.pet") { event in
         logger.info("got SQS event: \(event)")
@@ -44,27 +57,37 @@ if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
 
     awsApp.addDynamoStream(name: "com.github.kperson.dynamo.pet") { event in
         //send an event to a queue every time a pet is created
-        let createEvents = ChangeCapture.creates (
-            items: event.fromDynamo(type: Pet.self).records.map { $0.body }
-        )
+        let petChanges: [ChangeCapture<Pet>] = event.fromDynamo(type: Pet.self).records.map { $0.body }
+        let createEvents: [Pet] = petChanges.compactMap { i in
+            switch i {
+            case .create(new: let n): return n
+            default: return nil
+            }
+        }
+        let sendEvents = createEvents.map {
+            SQS.SendMessageRequest(messageBody: JSONEncoder().asString(item: $0), queueUrl: queueUrl)
+        }
 
-//        let futures = try! petEvents.
-//            switch change.body {
-//            case .create(new: let new):
-//                return SQS.SendMessageRequest(messageBody: JSONEncoder().asString(item: new), queueUrl: queueUrl)
-//            default:
-//                return nil
-//            }
-//        }.map(sqs.sendMessage)
-//
-//        return EventLoopFuture
-//            .whenAll(futures, eventLoop: event.context.eventLoop)
-//            .map { _ in Void() }
+        logger.info(sendEvents.description)
+        do {
+            logger.info("creating futures")
+            let futures = try sendEvents.map { e in
+                return try sqs.sendMessage(e)
+            }
+            return EventLoopFuture
+                .whenAll(futures, eventLoop: event.context.eventLoop)
+                .map { _ in Void() }
+        }
+        catch let error {
+            logger.info("error")
+            logger.report(error: error)
+            return event.context.eventLoop.newSucceededFuture(result: Void())
+        }
     }
 
     awsApp.addS3(name: "com.github.kperson.s3.test") { event in
-        
-        
+
+
         logger.info("got s3 event records: \(event.records)")
         return event.context.eventLoop.newSucceededFuture(result: Void())
     }

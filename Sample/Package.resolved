@@ -114,7 +114,7 @@
         "repositoryURL": "https://github.com/kperson/swift-aws-lambda-adapter.git",
         "state": {
           "branch": "master",
-          "revision": "12d2e587d67ebb5959f0c9750b87d978797073fb",
+          "revision": "23061d518973f1e9df2e6d980340807972c98408",
           "version": null
         }
       },
@@ -123,7 +123,7 @@
         "repositoryURL": "https://github.com/kperson/swift-lambda-tools.git",
         "state": {
           "branch": "master",
-          "revision": "af6ac3508e1212846ffecef431d7bbd9e244dd0e",
+          "revision": "a74cc2ed0db45b4361557168bebb369087074b2a",
           "version": null
         }
       },

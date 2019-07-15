@@ -24,32 +24,26 @@ public enum ChangeCapture<T> {
     
 }
 
-public extension ChangeCapture {
+public class Change {
     
-    static func creates<E>(_ items: [ChangeCapture<E>]) -> [E] {
-        return items.compactMap { i in
-            switch i {
-            case .create(new: let n): return n
-            default: return nil
-            }
+    static func createFilter<E>(_ i: ChangeCapture<E>) -> E? {
+        switch i {
+        case .create(new: let n): return n
+        default: return nil
         }
     }
     
-    static func deletes<E>(_ items: [ChangeCapture<E>]) -> [E] {
-        return items.compactMap { i in
-            switch i {
-            case .delete(old: let o): return o
-            default: return nil
-            }
+    static func deleteFilter<E>(_ i: ChangeCapture<E>) -> E? {
+        switch i {
+        case .delete(old: let o): return o
+        default: return nil
         }
     }
     
-    static func updates<E>(_ items: [ChangeCapture<E>]) -> [(new: E, old: E)] {
-        return items.compactMap { i in
-            switch i {
-            case .update(new: let n, old: let o): return (new: n, old: o)
-            default: return nil
-            }
+    static func updateFilter<E>(_ i: ChangeCapture<E>) -> (new: E, old: E)? {
+        switch i {
+        case .update(new: let n, old: let o): return (new: n, old: o)
+        default: return nil
         }
     }
     

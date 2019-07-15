@@ -24,17 +24,7 @@ extension JSONEncoder {
     
 }
 
-public extension ChangeCapture {
-    
-    static func creates2<E>(_ items: [ChangeCapture<E>]) -> [E] {
-        return items.compactMap { i in
-            switch i {
-            case .create(new: let n): return n
-            default: return nil
-            }
-        }
-    }
-}
+
 
 let sqs = SQS(accessKeyId: nil, secretAccessKey: nil, region: nil, endpoint: nil)
 
@@ -58,6 +48,10 @@ if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
     awsApp.addDynamoStream(name: "com.github.kperson.dynamo.pet") { event in
         //send an event to a queue every time a pet is created
         let petChanges: [ChangeCapture<Pet>] = event.fromDynamo(type: Pet.self).records.map { $0.body }
+        let x = Change.creates3(petChanges)
+        
+    
+
         let createEvents: [Pet] = petChanges.compactMap { i in
             switch i {
             case .create(new: let n): return n
@@ -70,7 +64,6 @@ if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
 
         logger.info(sendEvents.description)
         do {
-            logger.info("creating futures")
             let futures = try sendEvents.map { e in
                 return try sqs.sendMessage(e)
             }

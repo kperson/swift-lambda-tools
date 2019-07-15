@@ -67,3 +67,16 @@ public struct GroupedRecords<Context, Meta, Body> {
     
     
 }
+
+
+public extension GroupedRecords {
+    
+    var bodyRecords: [Body] {
+        return records.map { $0.body }
+    }
+    
+    var metaRecords: [Meta] {
+        return records.map { $0.meta }
+    }
+    
+}

@@ -17,16 +17,38 @@ struct Pet: Codable {
 
 extension JSONEncoder {
     
-    func asString<T: Codable>(item: T) -> String {
+    func asString<T: Encodable>(item: T) -> String {
         let data = try! encode(item)
         return String(data: data, encoding: .utf8)!
     }
     
 }
 
+extension EventLoopFuture {
+    
+    public static func groupedVoid(_ futures: [EventLoopFuture<T>], eventLoop: EventLoop) -> EventLoopFuture<Void> {
+        return EventLoopFuture.whenAll(futures, eventLoop: eventLoop).map { _  in Void() }
+    }
+    
+}
 
 
 let sqs = SQS(accessKeyId: nil, secretAccessKey: nil, region: nil, endpoint: nil)
+
+
+extension SQS {
+    
+    func sendEncodableMessage<T: Encodable>(
+        message: T,
+        queueUrl: String,
+        jsonEncoder: JSONEncoder? = nil
+    ) throws -> EventLoopFuture<SQS.SendMessageResult> {
+        let encoder = jsonEncoder ?? JSONEncoder()
+        let body = SQS.SendMessageRequest(messageBody: encoder.asString(item: message), queueUrl: queueUrl)
+        return try sendMessage(body)
+    }
+    
+}
 
 if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
 
@@ -46,36 +68,14 @@ if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
     }
 
     awsApp.addDynamoStream(name: "com.github.kperson.dynamo.pet") { event in
-        //send an event to a queue every time a pet is created
-        let changeEvents = event.fromDynamo(type: Pet.self).bodyRecords
-        let creates = changeEvents.compactMap(Change.)
-        let x = Change.creates3(petChanges)
-        
-    
-
-        let createEvents: [Pet] = petChanges.compactMap { i in
-            switch i {
-            case .create(new: let n): return n
-            default: return nil
-            }
-        }
-        let sendEvents = createEvents.map {
-            SQS.SendMessageRequest(messageBody: JSONEncoder().asString(item: $0), queueUrl: queueUrl)
-        }
-
-        logger.info(sendEvents.description)
         do {
-            let futures = try sendEvents.map { e in
-                return try sqs.sendMessage(e)
-            }
-            return EventLoopFuture
-                .whenAll(futures, eventLoop: event.context.eventLoop)
-                .map { _ in Void() }
+            let changeEvents = event.fromDynamo(type: Pet.self).bodyRecords
+            let creates = changeEvents.compactMap(Array<Any>.createFilter)
+            let futures = try creates.map { try sqs.sendEncodableMessage(message: $0, queueUrl: queueUrl) }
+            return EventLoopFuture.groupedVoid(futures, eventLoop: event.context.eventLoop)
         }
         catch let error {
-            logger.info("error")
-            logger.report(error: error)
-            return event.context.eventLoop.newSucceededFuture(result: Void())
+            return event.context.eventLoop.newFailedFuture(error: error)
         }
     }
 

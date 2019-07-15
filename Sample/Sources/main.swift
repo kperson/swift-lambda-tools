@@ -47,7 +47,8 @@ if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
 
     awsApp.addDynamoStream(name: "com.github.kperson.dynamo.pet") { event in
         //send an event to a queue every time a pet is created
-        let petChanges: [ChangeCapture<Pet>] = event.fromDynamo(type: Pet.self).records.map { $0.body }
+        let changeEvents = event.fromDynamo(type: Pet.self).bodyRecords
+        let creates = changeEvents.compactMap(Change.)
         let x = Change.creates3(petChanges)
         
     

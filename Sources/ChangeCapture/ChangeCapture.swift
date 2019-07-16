@@ -24,31 +24,48 @@ public enum ChangeCapture<T> {
     
 }
 
-public extension Array {
+public protocol ChangeCapturey {
     
-    static func createFilter<E>(_ i: ChangeCapture<E>) -> E? {
-        switch i {
-        case .create(new: let n): return n
-        default: return nil
+    associatedtype T
+    var change: ChangeCapture<T> { get }
+
+}
+
+extension ChangeCapture: ChangeCapturey {
+    public var change: ChangeCapture<T> { return self }
+}
+
+
+public extension Array where Element: ChangeCapturey {
+    
+    var creates: [Element.T] {
+        return compactMap { i in
+            switch i.change {
+            case .create(new: let n): return n
+            default: return nil
+            }
         }
     }
     
-    static func deleteFilter<E>(_ i: ChangeCapture<E>) -> E? {
-        switch i {
-        case .delete(old: let o): return o
-        default: return nil
+    var deletes: [Element.T] {
+        return compactMap { i in
+            switch i.change {
+            case .delete(old: let o): return o
+            default: return nil
+            }
         }
     }
     
-    static func updateFilter<E>(_ i: ChangeCapture<E>) -> (new: E, old: E)? {
-        switch i {
-        case .update(new: let n, old: let o): return (new: n, old: o)
-        default: return nil
+    var updates: [(new: Element.T, old: Element.T)] {
+        return compactMap { i in
+            switch i.change {
+            case .update(new: let n, old: let o): return (new: n, old: o)
+            default: return nil
+            }
         }
     }
     
 }
-
 
 public enum CreateDelete {
     

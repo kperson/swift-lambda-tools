@@ -15,40 +15,7 @@ struct Pet: Codable {
     
 }
 
-extension JSONEncoder {
-    
-    func asString<T: Encodable>(item: T) -> String {
-        let data = try! encode(item)
-        return String(data: data, encoding: .utf8)!
-    }
-    
-}
-
-extension EventLoopFuture {
-    
-    public static func groupedVoid(_ futures: [EventLoopFuture<T>], eventLoop: EventLoop) -> EventLoopFuture<Void> {
-        return EventLoopFuture.whenAll(futures, eventLoop: eventLoop).map { _  in Void() }
-    }
-    
-}
-
-
 let sqs = SQS(accessKeyId: nil, secretAccessKey: nil, region: nil, endpoint: nil)
-
-
-extension SQS {
-    
-    func sendEncodableMessage<T: Encodable>(
-        message: T,
-        queueUrl: String,
-        jsonEncoder: JSONEncoder? = nil
-    ) throws -> EventLoopFuture<SQS.SendMessageResult> {
-        let encoder = jsonEncoder ?? JSONEncoder()
-        let body = SQS.SendMessageRequest(messageBody: encoder.asString(item: message), queueUrl: queueUrl)
-        return try sendMessage(body)
-    }
-    
-}
 
 if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
 
@@ -72,7 +39,7 @@ if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
             let changeEvents = event.fromDynamo(type: Pet.self).bodyRecords
             let creates = changeEvents.compactMap(Array<Any>.createFilter)
             let futures = try creates.map { try sqs.sendEncodableMessage(message: $0, queueUrl: queueUrl) }
-            return EventLoopFuture.groupedVoid(futures, eventLoop: event.context.eventLoop)
+            return event.context.eventLoop.groupedVoid(futures)
         }
         catch let error {
             return event.context.eventLoop.newFailedFuture(error: error)

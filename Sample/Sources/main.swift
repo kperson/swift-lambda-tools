@@ -20,7 +20,10 @@ let sqs = SQS(accessKeyId: nil, secretAccessKey: nil, region: nil, endpoint: nil
 if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
 
     awsApp.addSQS(name: "com.github.kperson.sqs.pet") { event in
-        logger.info("got SQS event: \(event)")
+        let pets = event.compactMap {
+            try? JSONDecoder().fromString(type: Pet.self, str: $0.body)
+        }.bodyRecords
+        logger.info("got SQS event: \(pets)")
         return event.context.eventLoop.newSucceededFuture(result: Void())
     }
 
@@ -36,8 +39,7 @@ if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
 
     awsApp.addDynamoStream(name: "com.github.kperson.dynamo.pet") { event in
         do {
-            let changeEvents = event.fromDynamo(type: Pet.self).bodyRecords
-            let creates = changeEvents.compactMap(Array<Any>.createFilter)
+            let creates = event.fromDynamo(type: Pet.self).bodyRecords.creates
             let futures = try creates.map { try sqs.sendEncodableMessage(message: $0, queueUrl: queueUrl) }
             return event.context.eventLoop.groupedVoid(futures)
         }
@@ -47,12 +49,9 @@ if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
     }
 
     awsApp.addS3(name: "com.github.kperson.s3.test") { event in
-
-
         logger.info("got s3 event records: \(event.records)")
         return event.context.eventLoop.newSucceededFuture(result: Void())
     }
 
     try? awsApp.run()
-
 }

@@ -18,6 +18,14 @@ extension JSONEncoder {
     
 }
 
+extension JSONDecoder {
+    
+    func fromString<D: Decodable>(type: D.Type, str: String) throws -> D {
+        return try decode(type, from: str.data(using: .utf8) ?? "")
+    }
+    
+}
+
 extension EventLoop {
     
     public func groupedVoid<T>(_ futures: [EventLoopFuture<T>]) -> EventLoopFuture<Void> {

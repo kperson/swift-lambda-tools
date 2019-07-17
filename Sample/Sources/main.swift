@@ -1,11 +1,12 @@
-import VaporLambdaAdapter
-import SwiftAWS
-import SQS
 import Foundation
 import NIO
+import SwiftAWS
+import SQS
+import Vapor
+import VaporLambdaAdapter
 
 
-let logger = LambdaLogger()
+let logger: Logger = LambdaLogger()
 let awsApp = AWSApp()
 
 struct Pet: Codable {
@@ -15,37 +16,12 @@ struct Pet: Codable {
     
 }
 
-let sqs = SQS(accessKeyId: nil, secretAccessKey: nil, region: nil, endpoint: nil)
-
-let jsonDecoder = JSONDecoder()
-let jsonEncoder = JSONEncoder()
-
-
-public typealias SQSHandler2 = (SQSPayload) throws -> EventLoopFuture<Void>
-
-
-public extension AWSApp {
-
-    
-    func addSQS2(name: String, handler: @escaping SQSHandler2) {
-        let newHandler = { (payload: SQSPayload) -> EventLoopFuture<Void>  in
-            do {
-                return try handler(payload)
-            }
-            catch let error {
-                return payload.context.eventLoop.newFailedFuture(error: error)
-            }
-        }
-        add(name: name, handler: .sqs(handler: newHandler))
-    }
-
-}
-
-
 if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
 
-    awsApp.addSQS2(name: "com.github.kperson.sqs.pet") { event in
-        let pets = try event.fromJSON(type: Pet.self).bodyRecords
+    let sqs = SQS(accessKeyId: nil, secretAccessKey: nil, region: nil, endpoint: nil)
+    
+    awsApp.addSQS(name: "com.github.kperson.sqs.pet", type: Pet.self) { event in
+        let pets = event.bodyRecords
         logger.info("got SQS event: \(pets)")
         return event.context.eventLoop.newSucceededFuture(result: Void())
     }
@@ -60,21 +36,10 @@ if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
         return event.context.eventLoop.newSucceededFuture(result: event.data)
     }
 
-    awsApp.addDynamoStream(name: "com.github.kperson.dynamo.pet") { event in
-        do {
-            let creates = event.fromDynamo(type: Pet.self).bodyRecords.creates
-            let futures = try creates.map { try
-                sqs.sendEncodableMessage(
-                    message: $0,
-                    queueUrl: queueUrl,
-                    jsonEncoder: jsonEncoder
-                )
-            }
-            return event.context.eventLoop.groupedVoid(futures)
-        }
-        catch let error {
-            return event.context.eventLoop.newFailedFuture(error: error)
-        }
+    awsApp.addDynamoStream(name: "com.github.kperson.dynamo.pet", type: Pet.self) { event in
+        let creates = event.bodyRecords.creates
+        let futures = try creates.map { try sqs.sendEncodableMessage(message: $0, queueUrl: queueUrl) }
+        return event.context.eventLoop.groupedVoid(futures)
     }
 
     awsApp.addS3(name: "com.github.kperson.s3.test") { event in
@@ -82,5 +47,5 @@ if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
         return event.context.eventLoop.newSucceededFuture(result: Void())
     }
 
-    try? awsApp.run()
+    try awsApp.run()
 }

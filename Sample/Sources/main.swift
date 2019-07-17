@@ -23,11 +23,14 @@ let jsonEncoder = JSONEncoder()
 if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
 
     awsApp.addSQS(name: "com.github.kperson.sqs.pet") { event in
-        let pets = event.compactMap {
-            try? jsonDecoder.fromString(type: Pet.self, str: $0.body)
-            }.bodyRecords
-        logger.info("got SQS event: \(pets)")
-        return event.context.eventLoop.newSucceededFuture(result: Void())
+        do {
+            let pets = try event.fromJSON(type: Pet.self).bodyRecords
+            logger.info("got SQS event: \(pets)")
+            return event.context.eventLoop.newSucceededFuture(result: Void())
+        }
+        catch let error {
+            return event.context.eventLoop.newFailedFuture(error: error)
+        }
     }
 
     awsApp.addSNS(name: "com.github.kperson.sns.test") { event in

@@ -17,12 +17,15 @@ struct Pet: Codable {
 
 let sqs = SQS(accessKeyId: nil, secretAccessKey: nil, region: nil, endpoint: nil)
 
+let jsonDecoder = JSONDecoder()
+let jsonEncoder = JSONEncoder()
+
 if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
 
     awsApp.addSQS(name: "com.github.kperson.sqs.pet") { event in
         let pets = event.compactMap {
-            try? JSONDecoder().fromString(type: Pet.self, str: $0.body)
-        }.bodyRecords
+            try? jsonDecoder.fromString(type: Pet.self, str: $0.body)
+            }.bodyRecords
         logger.info("got SQS event: \(pets)")
         return event.context.eventLoop.newSucceededFuture(result: Void())
     }
@@ -40,7 +43,13 @@ if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
     awsApp.addDynamoStream(name: "com.github.kperson.dynamo.pet") { event in
         do {
             let creates = event.fromDynamo(type: Pet.self).bodyRecords.creates
-            let futures = try creates.map { try sqs.sendEncodableMessage(message: $0, queueUrl: queueUrl) }
+            let futures = try creates.map { try
+                sqs.sendEncodableMessage(
+                    message: $0,
+                    queueUrl: queueUrl,
+                    jsonEncoder: jsonEncoder
+                )
+            }
             return event.context.eventLoop.groupedVoid(futures)
         }
         catch let error {

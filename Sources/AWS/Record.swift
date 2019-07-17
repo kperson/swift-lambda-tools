@@ -18,8 +18,8 @@ public struct Record<Meta, Body> {
         self.body = body
     }
     
-    public func map<NewBody>(_ f: (Body) -> NewBody) -> Record<Meta, NewBody> {
-        return Record<Meta, NewBody>(meta: meta, body: f(body))
+    public func map<NewBody>(_ f: (Body) throws -> NewBody) rethrows -> Record<Meta, NewBody> {
+        return Record<Meta, NewBody>(meta: meta, body: try f(body))
     }
     
 }
@@ -34,25 +34,25 @@ public struct GroupedRecords<Context, Meta, Body> {
         self.records = records
     }
     
-    public func map<NewBody>(_ f: (Body) -> NewBody) -> GroupedRecords<Context, Meta, NewBody> {
-        let newRecords = records.map { $0.map(f) }
+    public func map<NewBody>(_ f: (Body) throws -> NewBody) rethrows -> GroupedRecords<Context, Meta, NewBody> {
+        let newRecords = try records.map { try $0.map(f) }
         return GroupedRecords<Context, Meta, NewBody>(
             context: context,
             records: newRecords
         )
     }
     
-    public func filter(_ f: (Body) -> Bool) -> GroupedRecords<Context, Meta, Body> {
-        let newRecords = records.filter {f($0.body) }
+    public func filter(_ f: (Body) throws -> Bool) rethrows -> GroupedRecords<Context, Meta, Body> {
+        let newRecords = try records.filter { try f($0.body) }
         return GroupedRecords<Context, Meta, Body>(
             context: context,
             records: newRecords
         )
     }
     
-    public func compactMap<NewBody>(_ f: (Body) -> NewBody?) -> GroupedRecords<Context, Meta, NewBody> {
-        let newRecords = records.compactMap { r -> Record<Meta, NewBody>? in
-            if let rs = f(r.body) {
+    public func compactMap<NewBody>(_ f: (Body) throws -> NewBody?) rethrows -> GroupedRecords<Context, Meta, NewBody> {
+        let newRecords = try records.compactMap { r -> Record<Meta, NewBody>? in
+            if let rs = try f(r.body) {
                 return Record<Meta, NewBody>(meta: r.meta, body: rs)
             }
             else {

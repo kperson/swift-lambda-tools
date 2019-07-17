@@ -40,5 +40,5 @@ class SNSTests: XCTestCase {
         XCTAssertEqual(record.topicArn, "arn:aws:sns:us-east-1:193125195061:q_test")
         XCTAssertEqual(record.subject, "SUB")
     }
-
+    
 }

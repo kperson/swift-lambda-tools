@@ -85,3 +85,18 @@ public struct SNSRecord: SNSRecordMeta, SNSBodyAttributes, LambdaArrayRecord {
 
 public typealias SNSPayload = GroupedRecords<EventLoopGroup, SNSRecordMeta, SNSBodyAttributes>
 public typealias SNSHandler = (SNSPayload) -> EventLoopFuture<Void>
+
+
+public extension GroupedRecords where Body == SNSBodyAttributes {
+    
+    func fromJSON<T: Decodable>(
+        type: T.Type,
+        decoder: JSONDecoder = JSONDecoder()
+    ) throws ->  GroupedRecords<Context, Meta, T>  {
+        return try map { val in
+            let d = val.message.data(using: .utf8)!
+            return try decoder.decode(type, from: d)
+        }
+    }
+    
+}

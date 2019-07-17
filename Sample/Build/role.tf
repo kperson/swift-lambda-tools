@@ -43,7 +43,9 @@ resource "aws_iam_role_policy_attachment" "log" {
 #hack, we need to wait until the attachements are complete
 data "template_file" "role_arn" {
   depends_on = [
-    "aws_iam_role_policy_attachment.log"
+    "aws_iam_role_policy_attachment.log",
+    "aws_iam_role_policy_attachment.sqs_pet",
+    "aws_iam_role_policy_attachment.dynamo_pet"
   ]
   template = "$${arn}"
 

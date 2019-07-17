@@ -74,27 +74,3 @@ resource "aws_iam_role_policy_attachment" "dynamo_pet" {
   role       = "${aws_iam_role.lambda.name}"
   policy_arn = "${aws_iam_policy.dynamo_pet.arn}"
 }
-
-
-#hacks, we need to wait until the attachements are complete
-data "template_file" "dynamo_pet_table_id" {
-  depends_on = [
-    "aws_iam_role_policy_attachment.dynamo_pet"
-  ]
-  template = "$${id}"
-
-  vars = {
-    id = "${aws_dynamodb_table.pet.id}"
-  }
-}
-
-data "template_file" "dynamo_pet_table_stream_arn" {
-  depends_on = [
-    "aws_iam_role_policy_attachment.dynamo_pet"
-  ]
-  template = "$${id}"
-
-  vars = {
-    id = "${aws_dynamodb_table.pet.stream_arn}"
-  }
-}

@@ -20,17 +20,34 @@ let sqs = SQS(accessKeyId: nil, secretAccessKey: nil, region: nil, endpoint: nil
 let jsonDecoder = JSONDecoder()
 let jsonEncoder = JSONEncoder()
 
+
+public typealias SQSHandler2 = (SQSPayload) throws -> EventLoopFuture<Void>
+
+
+public extension AWSApp {
+
+    
+    func addSQS2(name: String, handler: @escaping SQSHandler2) {
+        let newHandler = { (payload: SQSPayload) -> EventLoopFuture<Void>  in
+            do {
+                return try handler(payload)
+            }
+            catch let error {
+                return payload.context.eventLoop.newFailedFuture(error: error)
+            }
+        }
+        add(name: name, handler: .sqs(handler: newHandler))
+    }
+
+}
+
+
 if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
 
-    awsApp.addSQS(name: "com.github.kperson.sqs.pet") { event in
-        do {
-            let pets = try event.fromJSON(type: Pet.self).bodyRecords
-            logger.info("got SQS event: \(pets)")
-            return event.context.eventLoop.newSucceededFuture(result: Void())
-        }
-        catch let error {
-            return event.context.eventLoop.newFailedFuture(error: error)
-        }
+    awsApp.addSQS2(name: "com.github.kperson.sqs.pet") { event in
+        let pets = try event.fromJSON(type: Pet.self).bodyRecords
+        logger.info("got SQS event: \(pets)")
+        return event.context.eventLoop.newSucceededFuture(result: Void())
     }
 
     awsApp.addSNS(name: "com.github.kperson.sns.test") { event in

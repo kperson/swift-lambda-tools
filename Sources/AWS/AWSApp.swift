@@ -100,13 +100,39 @@ public extension AWSApp {
         }
         add(name: name, handler: .custom(handler: CustomLambdaEventFuncWrapper(function: h)))
     }
+
     
     func addSQS(name: String, handler: @escaping SQSHandler) {
         add(name: name, handler: .sqs(handler: handler))
     }
     
+    
+    func addSQS<T: Decodable>(
+        name: String,
+        type: T.Type,
+        decoder: JSONDecoder? = nil,
+        handler: @escaping (GroupedRecords<EventLoopGroup, SQSRecordMeta, T>) throws -> EventLoopFuture<Void>
+    ) {
+        addSQS(name: name) { payload -> EventLoopFuture<Void> in
+            let event = try payload.fromJSON(type: type, decoder: decoder)
+            return try handler(event)
+        }
+    }
+    
     func addSNS(name: String, handler: @escaping SNSHandler) {
         add(name: name, handler: .sns(handler: handler))
+    }
+    
+    func addSNS<T: Decodable>(
+        name: String,
+        type: T.Type,
+        decoder: JSONDecoder? = nil,
+        handler: @escaping (GroupedRecords<EventLoopGroup, SNSRecordMeta, T>) throws -> EventLoopFuture<Void>
+    ) {
+        addSNS(name: name) { payload -> EventLoopFuture<Void> in
+            let event = try payload.fromJSON(type: type, decoder: decoder)
+            return try handler(event)
+        }
     }
     
     func addS3(name: String, handler: @escaping S3Handler) {
@@ -115,6 +141,21 @@ public extension AWSApp {
     
     func addDynamoStream(name: String, handler: @escaping DynamoStreamHandler) {
         add(name: name, handler: .dynamoStream(handler: handler))
+    }
+    
+    func addDynamoStream<T: Decodable>(
+        name: String,
+        type: T.Type,
+        caseSetting: CaseSettings? = nil,
+        handler: @escaping (GroupedRecords<EventLoopGroup, DynamoStreamRecordMeta, ChangeCapture<T>>) throws -> EventLoopFuture<Void>
+        ) {
+        addDynamoStream(name: name) { payload -> EventLoopFuture<Void> in
+            let event = try payload.fromDynamo(
+                type: type,
+                caseSettings: caseSetting
+            )
+            return try handler(event)
+        }
     }
     
     func addHTTPServer(

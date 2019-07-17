@@ -164,18 +164,19 @@ public struct SQSRecord: SQSRecordMeta, SQSBodyAttributes, LambdaArrayRecord {
     
 }
 
-public typealias SQSHandler = (SQSPayload) -> EventLoopFuture<Void>
+public typealias SQSHandler = (SQSPayload) throws -> EventLoopFuture<Void>
 public typealias SQSPayload = GroupedRecords<EventLoopGroup, SQSRecordMeta, SQSBodyAttributes>
 
 public extension GroupedRecords where Body == SQSBodyAttributes {
     
     func fromJSON<T: Decodable>(
         type: T.Type,
-        decoder: JSONDecoder = JSONDecoder()
+        decoder: JSONDecoder? = nil
     ) throws ->  GroupedRecords<Context, Meta, T>  {
+        let de = decoder ?? JSONDecoder()
         return try map { val in
             let d = val.body.data(using: .utf8)!
-            return try decoder.decode(type, from: d)
+            return try de.decode(type, from: d)
         }
     }
     

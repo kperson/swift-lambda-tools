@@ -77,7 +77,7 @@ public struct DynamoStreamRecord: DynamoStreamRecordMeta, DynamoStreamBodyAttrib
 }
 
 public typealias DynamoStreamPayload = GroupedRecords<EventLoopGroup, DynamoStreamRecordMeta, DynamoStreamBodyAttributes>
-public typealias DynamoStreamHandler = (DynamoStreamPayload) -> EventLoopFuture<Void>
+public typealias DynamoStreamHandler = (DynamoStreamPayload) throws -> EventLoopFuture<Void>
 
 
 
@@ -86,9 +86,9 @@ public extension GroupedRecords where Body == DynamoStreamBodyAttributes {
     func fromDynamo<T>(
         type: T.Type,
         caseSettings: CaseSettings? = nil
-    ) -> GroupedRecords<Context, Meta, ChangeCapture<T>> where T: Decodable {
-        return compactMap { m in
-            m.change.map { try! $0.fromDynamo(type: type, caseSettings: caseSettings) }
+    ) throws -> GroupedRecords<Context, Meta, ChangeCapture<T>> where T: Decodable {
+        return try compactMap { m in
+            try m.change.map { try $0.fromDynamo(type: type, caseSettings: caseSettings) }
         }
     }
 }

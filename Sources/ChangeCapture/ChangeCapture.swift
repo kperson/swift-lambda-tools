@@ -13,11 +13,11 @@ public enum ChangeCapture<T> {
     case update(new: T, old: T)
     case delete(old: T)
     
-    public func map<New>(f: (T) -> New) -> ChangeCapture<New> {
+    public func map<New>(f: (T) throws -> New) rethrows -> ChangeCapture<New> {
         switch self {
-        case .create(new: let n): return .create(new: f(n))
-        case .update(new: let n, old: let o): return .update(new: f(n), old: f(o))
-        case .delete(old: let o): return .delete(old: f(o))
+        case .create(new: let n): return .create(new: try f(n))
+        case .update(new: let n, old: let o): return .update(new: try f(n), old: try f(o))
+        case .delete(old: let o): return .delete(old: try f(o))
 
         }
     }

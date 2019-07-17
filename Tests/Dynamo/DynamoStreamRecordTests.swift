@@ -227,7 +227,7 @@ class DynamoStreamRecordTests: XCTestCase {
             ]
         )
     
-        let groupedPet = grouped.fromDynamo(type: MyPet.self)
+        let groupedPet = try! grouped.fromDynamo(type: MyPet.self)
         if case let ChangeCapture.create(new: new) = groupedPet.records[0].body {
             XCTAssertEqual(new.pet, "Rover")
             XCTAssertEqual(new.userId, "df60085d-c5f8-47b0-ad04-1f3f58dfcc89")

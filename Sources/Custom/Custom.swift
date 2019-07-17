@@ -72,9 +72,9 @@ public protocol LambdaArrayRecord {
 
 public class LambdaArrayRecordEventHandler<T: LambdaArrayRecord>: LambdaEventHandler {
     
-    let handler: (GroupedRecords<EventLoopGroup, T.Meta, T.Body>) -> EventLoopFuture<Void>
+    let handler: (GroupedRecords<EventLoopGroup, T.Meta, T.Body>) throws -> EventLoopFuture<Void>
 
-    public init(handler: @escaping (GroupedRecords<EventLoopGroup, T.Meta, T.Body>) -> EventLoopFuture<Void>) {
+    public init(handler: @escaping (GroupedRecords<EventLoopGroup, T.Meta, T.Body>) throws -> EventLoopFuture<Void>) {
         self.handler = handler
     }
     
@@ -88,7 +88,12 @@ public class LambdaArrayRecordEventHandler<T: LambdaArrayRecord>: LambdaEventHan
                 .map { r in Record(meta: r.recordMeta, body: r.recordBody) }
             
             let grouped = GroupedRecords(context: eventLoopGroup, records: transformedRecords)
-            return handler(grouped).map { _ in [:] }
+            do {
+                return try handler(grouped).map { _ in [:] }
+            }
+            catch let error {
+                return eventLoopGroup.eventLoop.newFailedFuture(error: error)
+            }
         }
         else {
             return eventLoopGroup.eventLoop.newSucceededFuture(result: [:])

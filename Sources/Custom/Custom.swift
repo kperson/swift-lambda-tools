@@ -61,8 +61,8 @@ public struct ContextData<C, D> {
 
 public struct LambdaExecutionContext {
     
-    let eventLoopGroup: EventLoopGroup
-    let requestContext: [String : Any]
+    public let eventLoopGroup: EventLoopGroup
+    public let requestContext: [String : Any]
     
 }
 
@@ -125,4 +125,16 @@ public extension GroupedRecords where Context == LambdaExecutionContext {
         return context.eventLoopGroup.eventLoop
     }
 
+}
+
+public extension ContextData where C == LambdaExecutionContext {
+  
+    var eventLoopGroup: EventLoopGroup {
+        return context.eventLoopGroup
+    }
+    
+    var eventLoop: EventLoop {
+        return context.eventLoopGroup.eventLoop
+    }
+    
 }

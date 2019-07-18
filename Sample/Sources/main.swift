@@ -23,29 +23,29 @@ if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
     awsApp.addSQS(name: "com.github.kperson.sqs.pet", type: Pet.self) { event in
         let pets = event.bodyRecords
         logger.info("got SQS event: \(pets)")
-        event.context.eventGroup
+        event.context.self
         return event.eventLoop.newSucceededFuture(result: Void())
     }
 
     awsApp.addSNS(name: "com.github.kperson.sns.test") { event in
         logger.info("got SNS event: \(event)")
-        return event.context.eventLoop.newSucceededFuture(result: Void())
+        return event.eventLoop.newSucceededFuture(result: Void())
     }
 
     awsApp.addCustom(name: "com.github.kperson.custom.test") { event in
         logger.info("got custom event: \(event), echo")
-        return event.context.eventLoop.newSucceededFuture(result: event.data)
+        return event.eventLoop.newSucceededFuture(result: event.data)
     }
 
     awsApp.addDynamoStream(name: "com.github.kperson.dynamo.pet", type: Pet.self) { event in
         let creates = event.bodyRecords.creates
         let futures = try creates.map { try sqs.sendEncodableMessage(message: $0, queueUrl: queueUrl) }
-        return event.context.eventLoop.groupedVoid(futures)
+        return event.eventLoop.groupedVoid(futures)
     }
 
     awsApp.addS3(name: "com.github.kperson.s3.test") { event in
         logger.info("got s3 event records: \(event.records)")
-        return event.context.eventLoop.newSucceededFuture(result: Void())
+        return event.eventLoop.newSucceededFuture(result: Void())
     }
 
     try awsApp.run()

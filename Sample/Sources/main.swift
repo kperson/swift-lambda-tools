@@ -23,7 +23,8 @@ if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
     awsApp.addSQS(name: "com.github.kperson.sqs.pet", type: Pet.self) { event in
         let pets = event.bodyRecords
         logger.info("got SQS event: \(pets)")
-        return event.context.eventLoop.newSucceededFuture(result: Void())
+        event.context.eventGroup
+        return event.eventLoop.newSucceededFuture(result: Void())
     }
 
     awsApp.addSNS(name: "com.github.kperson.sns.test") { event in

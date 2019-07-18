@@ -121,7 +121,7 @@ public extension GroupedRecords where Context == LambdaExecutionContext {
         return context.eventLoopGroup
     }
     
-    var eventLoop: EventLoopGroup {
+    var eventLoop: EventLoop {
         return context.eventLoopGroup.eventLoop
     }
 

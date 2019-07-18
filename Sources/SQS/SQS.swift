@@ -165,7 +165,7 @@ public struct SQSRecord: SQSRecordMeta, SQSBodyAttributes, LambdaArrayRecord {
 }
 
 public typealias SQSHandler = (SQSPayload) throws -> EventLoopFuture<Void>
-public typealias SQSPayload = GroupedRecords<EventLoopGroup, SQSRecordMeta, SQSBodyAttributes>
+public typealias SQSPayload = GroupedRecords<LambdaExecutionContext, SQSRecordMeta, SQSBodyAttributes>
 
 public extension GroupedRecords where Body == SQSBodyAttributes {
     

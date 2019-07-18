@@ -29,17 +29,18 @@ public class Custom {
 
 struct CustomLambdaEventFuncWrapper: LambdaEventHandler {
     
-    let function: ([String: Any], EventLoopGroup) -> EventLoopFuture<[String : Any]>
+    let function: ([String: Any], [String : Any], EventLoopGroup) -> EventLoopFuture<[String : Any]>
     
-    init(function: @escaping ([String: Any], EventLoopGroup) -> EventLoopFuture<[String : Any]>) {
+    init(function: @escaping ([String: Any], [String : Any], EventLoopGroup) -> EventLoopFuture<[String : Any]>) {
         self.function = function
     }
     
-    func handle(data: [String : Any], eventLoopGroup: EventLoopGroup) -> EventLoopFuture<[String : Any]> {
-        return function(data, eventLoopGroup)
+    func handle(data: [String : Any], headers: [String : Any], eventLoopGroup: EventLoopGroup) -> EventLoopFuture<[String : Any]> {
+        return function(data, headers, eventLoopGroup)
     }
     
 }
+
 
 
 public struct ContextData<C, D> {
@@ -58,6 +59,13 @@ public struct ContextData<C, D> {
     
 }
 
+public struct LambdaExecutionContext {
+    
+    let eventLoopGroup: EventLoopGroup
+    let requestContext: [String : Any]
+    
+}
+
 
 public protocol LambdaArrayRecord {
     
@@ -72,14 +80,15 @@ public protocol LambdaArrayRecord {
 
 public class LambdaArrayRecordEventHandler<T: LambdaArrayRecord>: LambdaEventHandler {
     
-    let handler: (GroupedRecords<EventLoopGroup, T.Meta, T.Body>) throws -> EventLoopFuture<Void>
+    let handler: (GroupedRecords<LambdaExecutionContext, T.Meta, T.Body>) throws -> EventLoopFuture<Void>
 
-    public init(handler: @escaping (GroupedRecords<EventLoopGroup, T.Meta, T.Body>) throws -> EventLoopFuture<Void>) {
+    public init(handler: @escaping (GroupedRecords<LambdaExecutionContext, T.Meta, T.Body>) throws -> EventLoopFuture<Void>) {
         self.handler = handler
     }
     
     public func handle(
         data: [String : Any],
+        headers: [String : Any],
         eventLoopGroup: EventLoopGroup
     ) -> EventLoopFuture<[String : Any]> {
         if let records = data["Records"] as? [[String : Any]] {
@@ -87,7 +96,11 @@ public class LambdaArrayRecordEventHandler<T: LambdaArrayRecord>: LambdaEventHan
                 .compactMap { T(dict: $0) }
                 .map { r in Record(meta: r.recordMeta, body: r.recordBody) }
             
-            let grouped = GroupedRecords(context: eventLoopGroup, records: transformedRecords)
+            let grouped = GroupedRecords(
+                context: LambdaExecutionContext(eventLoopGroup: eventLoopGroup, requestContext: headers),
+                records: transformedRecords
+            )
+            
             do {
                 return try handler(grouped).map { _ in [:] }
             }
@@ -99,4 +112,17 @@ public class LambdaArrayRecordEventHandler<T: LambdaArrayRecord>: LambdaEventHan
             return eventLoopGroup.eventLoop.newSucceededFuture(result: [:])
         }
     }
+}
+
+
+public extension GroupedRecords where Context == LambdaExecutionContext {
+    
+    var eventLoopGroup: EventLoopGroup {
+        return context.eventLoopGroup
+    }
+    
+    var eventLoop: EventLoopGroup {
+        return context.eventLoopGroup.eventLoop
+    }
+
 }

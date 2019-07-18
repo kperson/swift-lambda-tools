@@ -76,7 +76,7 @@ public struct DynamoStreamRecord: DynamoStreamRecordMeta, DynamoStreamBodyAttrib
     
 }
 
-public typealias DynamoStreamPayload = GroupedRecords<EventLoopGroup, DynamoStreamRecordMeta, DynamoStreamBodyAttributes>
+public typealias DynamoStreamPayload = GroupedRecords<LambdaExecutionContext, DynamoStreamRecordMeta, DynamoStreamBodyAttributes>
 public typealias DynamoStreamHandler = (DynamoStreamPayload) throws -> EventLoopFuture<Void>
 
 

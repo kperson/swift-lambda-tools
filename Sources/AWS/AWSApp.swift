@@ -93,10 +93,13 @@ public extension AWSApp {
     
     func addCustom(
         name: String,
-        function: @escaping (ContextData<EventLoopGroup, [String : Any]>) -> EventLoopFuture<[String : Any]>
+        function: @escaping (ContextData<LambdaExecutionContext, [String : Any]>) -> EventLoopFuture<[String : Any]>
     ) {
-        let h: ([String: Any], EventLoopGroup) -> EventLoopFuture<[String : Any]> = { dict, group in
-            function(ContextData(context: group, data: dict))
+        let h: ([String: Any], [String: Any], EventLoopGroup) -> EventLoopFuture<[String : Any]> = { dict, requestContext, group in
+            function(ContextData(
+                context: LambdaExecutionContext(eventLoopGroup: group, requestContext: requestContext),
+                data: dict
+            ))
         }
         add(name: name, handler: .custom(handler: CustomLambdaEventFuncWrapper(function: h)))
     }
@@ -111,7 +114,7 @@ public extension AWSApp {
         name: String,
         type: T.Type,
         decoder: JSONDecoder? = nil,
-        handler: @escaping (GroupedRecords<EventLoopGroup, SQSRecordMeta, T>) throws -> EventLoopFuture<Void>
+        handler: @escaping (GroupedRecords<LambdaExecutionContext, SQSRecordMeta, T>) throws -> EventLoopFuture<Void>
     ) {
         addSQS(name: name) { payload -> EventLoopFuture<Void> in
             let event = try payload.fromJSON(type: type, decoder: decoder)
@@ -127,7 +130,7 @@ public extension AWSApp {
         name: String,
         type: T.Type,
         decoder: JSONDecoder? = nil,
-        handler: @escaping (GroupedRecords<EventLoopGroup, SNSRecordMeta, T>) throws -> EventLoopFuture<Void>
+        handler: @escaping (GroupedRecords<LambdaExecutionContext, SNSRecordMeta, T>) throws -> EventLoopFuture<Void>
     ) {
         addSNS(name: name) { payload -> EventLoopFuture<Void> in
             let event = try payload.fromJSON(type: type, decoder: decoder)
@@ -147,7 +150,7 @@ public extension AWSApp {
         name: String,
         type: T.Type,
         caseSetting: CaseSettings? = nil,
-        handler: @escaping (GroupedRecords<EventLoopGroup, DynamoStreamRecordMeta, ChangeCapture<T>>) throws -> EventLoopFuture<Void>
+        handler: @escaping (GroupedRecords<LambdaExecutionContext, DynamoStreamRecordMeta, ChangeCapture<T>>) throws -> EventLoopFuture<Void>
         ) {
         addDynamoStream(name: name) { payload -> EventLoopFuture<Void> in
             let event = try payload.fromDynamo(

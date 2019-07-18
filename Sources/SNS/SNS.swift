@@ -83,7 +83,7 @@ public struct SNSRecord: SNSRecordMeta, SNSBodyAttributes, LambdaArrayRecord {
 
 }
 
-public typealias SNSPayload = GroupedRecords<EventLoopGroup, SNSRecordMeta, SNSBodyAttributes>
+public typealias SNSPayload = GroupedRecords<LambdaExecutionContext, SNSRecordMeta, SNSBodyAttributes>
 public typealias SNSHandler = (SNSPayload) throws -> EventLoopFuture<Void>
 
 

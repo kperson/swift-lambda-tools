@@ -6,24 +6,22 @@ import Vapor
 import VaporLambdaAdapter
 
 
-let logger: Logger = LambdaLogger()
-let awsApp = AWSApp()
-
 struct Pet: Codable {
-    
+
     let userId: String
     let pet: String
-    
+
 }
 
 if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
 
+    let logger: Logger = LambdaLogger()
+    let awsApp = AWSApp()
     let sqs = SQS(accessKeyId: nil, secretAccessKey: nil, region: nil, endpoint: nil)
     
     awsApp.addSQS(name: "com.github.kperson.sqs.pet", type: Pet.self) { event in
         let pets = event.bodyRecords
         logger.info("got SQS event: \(pets)")
-        event.context.self
         return event.eventLoop.newSucceededFuture(result: Void())
     }
 

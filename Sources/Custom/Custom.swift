@@ -29,14 +29,19 @@ public class Custom {
 
 struct CustomLambdaEventFuncWrapper: LambdaEventHandler {
     
-    let function: ([String: Any], [String : Any], EventLoopGroup) -> EventLoopFuture<[String : Any]>
+    let function: ([String: Any], [String : Any], EventLoopGroup) throws -> EventLoopFuture<[String : Any]>
     
-    init(function: @escaping ([String: Any], [String : Any], EventLoopGroup) -> EventLoopFuture<[String : Any]>) {
+    init(function: @escaping ([String: Any], [String : Any], EventLoopGroup) throws -> EventLoopFuture<[String : Any]>) {
         self.function = function
     }
     
     func handle(data: [String : Any], headers: [String : Any], eventLoopGroup: EventLoopGroup) -> EventLoopFuture<[String : Any]> {
-        return function(data, headers, eventLoopGroup)
+        do {
+            return try function(data, headers, eventLoopGroup)
+        }
+        catch let error {
+            return eventLoopGroup.eventLoop.newFailedFuture(error: error)
+        }
     }
     
 }
@@ -53,8 +58,8 @@ public struct ContextData<C, D> {
         self.data = data
     }
     
-    public func map<NewD>(_ f: (D) -> NewD) -> ContextData<C, NewD> {
-        return ContextData<C, NewD>(context: context, data: f(data))
+    public func map<NewD>(_ f: (D) throws -> NewD) rethrows -> ContextData<C, NewD> {
+        return ContextData<C, NewD>(context: context, data: try f(data))
     }
     
 }

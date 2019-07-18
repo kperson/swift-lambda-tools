@@ -93,10 +93,10 @@ public extension AWSApp {
     
     func addCustom(
         name: String,
-        function: @escaping (ContextData<LambdaExecutionContext, [String : Any]>) -> EventLoopFuture<[String : Any]>
+        function: @escaping (ContextData<LambdaExecutionContext, [String : Any]>) throws -> EventLoopFuture<[String : Any]>
     ) {
-        let h: ([String: Any], [String: Any], EventLoopGroup) -> EventLoopFuture<[String : Any]> = { dict, requestContext, group in
-            function(ContextData(
+        let h: ([String: Any], [String: Any], EventLoopGroup) throws -> EventLoopFuture<[String : Any]> = { dict, requestContext, group in
+            try function(ContextData(
                 context: LambdaExecutionContext(eventLoopGroup: group, requestContext: requestContext),
                 data: dict
             ))

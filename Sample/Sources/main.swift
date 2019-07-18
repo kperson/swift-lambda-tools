@@ -29,12 +29,7 @@ if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
         logger.info("got SNS event: \(event)")
         return event.eventLoop.newSucceededFuture(result: Void())
     }
-
-    awsApp.addCustom(name: "com.github.kperson.custom.test") { event in
-        logger.info("got custom event: \(event), echo")
-        return event.eventLoop.newSucceededFuture(result: event.data)
-    }
-
+ 
     awsApp.addDynamoStream(name: "com.github.kperson.dynamo.pet", type: Pet.self) { event in
         let creates = event.bodyRecords.creates
         let futures = try creates.map { try sqs.sendEncodableMessage(message: $0, queueUrl: queueUrl) }

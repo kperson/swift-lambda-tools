@@ -64,8 +64,7 @@ public struct GroupedRecords<Context, Meta, Body> {
             records: newRecords
         )
     }
-    
-    
+
 }
 
 
@@ -77,6 +76,18 @@ public extension GroupedRecords {
     
     var metaRecords: [Meta] {
         return records.map { $0.meta }
+    }
+    
+}
+
+public extension GroupedRecords where Context == LambdaExecutionContext {
+    
+    var eventLoopGroup: EventLoopGroup {
+        return context.eventLoopGroup
+    }
+    
+    var eventLoop: EventLoop {
+        return context.eventLoopGroup.eventLoop
     }
     
 }

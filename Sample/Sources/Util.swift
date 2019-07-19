@@ -7,9 +7,10 @@
 
 import Foundation
 import SQS
+import SNS
 import NIO
 
-extension JSONEncoder {
+public extension JSONEncoder {
     
     func asString<T: Encodable>(item: T) -> String {
         let data = try! encode(item)
@@ -18,25 +19,25 @@ extension JSONEncoder {
     
 }
 
-extension JSONDecoder {
+public extension JSONDecoder {
     
-    func fromString<D: Decodable>(type: D.Type, str: String) throws -> D {
+    func fromJSON<D: Decodable>(type: D.Type, str: String) throws -> D {
         return try decode(type, from: str.data(using: .utf8) ?? "")
     }
     
 }
 
-extension EventLoop {
+public extension EventLoop {
     
-    public func groupedVoid<T>(_ futures: [EventLoopFuture<T>]) -> EventLoopFuture<Void> {
+    func groupedVoid<T>(_ futures: [EventLoopFuture<T>]) -> EventLoopFuture<Void> {
         return EventLoopFuture.whenAll(futures, eventLoop: self).map { _  in Void() }
     }
     
 }
 
-extension SQS {
+public extension SQS {
     
-    func sendEncodableMessage<T: Encodable>(
+    func sendJSONMessage<T: Encodable>(
         message: T,
         queueUrl: String,
         jsonEncoder: JSONEncoder? = nil
@@ -46,4 +47,31 @@ extension SQS {
         return try sendMessage(body)
     }
     
+}
+
+
+public extension SNS {
+    
+    func sendJSONMessage<T: Encodable>(
+        message: T,
+        messageAttributes: [String : SNS.MessageAttributeValue]? = nil,
+        messageStructure: String? = nil,
+        phoneNumber: String? = nil,
+        subject: String? = nil,
+        targetArn: String? = nil,
+        topicArn: String? = nil,
+        jsonEncoder: JSONEncoder? = nil
+    ) throws -> EventLoopFuture<SNS.PublishResponse> {
+        let encoder = jsonEncoder ?? JSONEncoder()
+        let input = SNS.PublishInput(
+            message: encoder.asString(item: message),
+            messageAttributes: messageAttributes,
+            messageStructure: messageStructure,
+            phoneNumber: phoneNumber,
+            subject: subject,
+            targetArn: targetArn,
+            topicArn: topicArn
+        )
+        return try publish(input)
+    }
 }

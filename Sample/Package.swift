@@ -15,17 +15,11 @@ let package = Package(
             name: "Sample",
             dependencies: [
                 "SwiftAWS",
+                "SNS",
                 "SQS",
                 "DynamoDB"
             ],
             path: "./Sources"
-        ),
-        .testTarget(
-            name: "SampleTests",
-            dependencies: [
-                "Sample"
-            ],
-            path: "./Tests"
         )
     ]
 )

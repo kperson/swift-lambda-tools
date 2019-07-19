@@ -32,7 +32,7 @@ if let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"] {
  
     awsApp.addDynamoStream(name: "com.github.kperson.dynamo.pet", type: Pet.self) { event in
         let creates = event.bodyRecords.creates
-        let futures = try creates.map { try sqs.sendEncodableMessage(message: $0, queueUrl: queueUrl) }
+        let futures = try creates.map { try sqs.sendJSONMessage(message: $0, queueUrl: queueUrl) }
         return event.eventLoop.groupedVoid(futures)
     }
 

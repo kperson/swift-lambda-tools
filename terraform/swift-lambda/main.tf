@@ -4,6 +4,16 @@ variable "build_params" {
   type = "map"
 }
 
+variable "subnet_ids" {
+  type = "list"
+  default = []
+}
+
+variable "security_group_ids" {
+  type = "list"
+  default = []
+}
+
 variable "env" {
   type = "map"
   default = {}
@@ -41,6 +51,11 @@ resource "aws_lambda_function" "lambda" {
   publish          = true
   layers           = ["${var.build_params["runtime_layer"]}"]
   source_code_hash = "${var.build_params["zip_file_hash"]}"
+
+  vpc_config {
+    subnet_ids         = "${var.subnet_ids}"
+    security_group_ids = "${var.security_group_ids}"
+  }
 
   environment {
     variables = "${var.env}"

@@ -9,6 +9,16 @@ variable "env" {
   default = {}
 }
 
+variable "subnet_ids" {
+  type    = "list"
+  default = []
+}
+
+variable "security_group_ids" {
+  type    = "list"
+  default = []
+}
+
 # Common
 variable "function_name" {
   type = "string"
@@ -35,11 +45,6 @@ variable "topic_arn" {
   type = "string"
 }
 
-variable "raw_message_delivery" {
-  type    = "boolean"
-  default = null
-}
-
 variable "filter_policy" {
   type    = "string"
   default = null
@@ -49,6 +54,7 @@ variable "delivery_policy" {
   type    = "string"
   default = null
 }
+
 
 resource "aws_lambda_function" "lambda" {
   filename         = "${var.build_params["zip_file"]}"
@@ -62,16 +68,29 @@ resource "aws_lambda_function" "lambda" {
   layers           = ["${var.build_params["runtime_layer"]}"]
   source_code_hash = "${var.build_params["zip_file_hash"]}"
 
+  vpc_config {
+    subnet_ids         = "${var.subnet_ids}"
+    security_group_ids = "${var.security_group_ids}"
+  }
+
   environment {
     variables = "${var.env}"
   }
 }
 
+resource "aws_lambda_permission" "lambda" {
+  statement_id  = "AllowExecutionFromSNS"
+  action        = "lambda:InvokeFunction"
+  function_name = "${aws_lambda_function.lambda.function_name}"
+  principal     = "sns.amazonaws.com"
+  source_arn    = "${var.topic_arn}"
+}
+
 resource "aws_sns_topic_subscription" "lambda" {
-  topic_arn            = "${var.topic_arn}"
-  protocol             = "lambda"
-  endpoint             = "${aws_lambda_function.lambda.arn}"
-  raw_message_delivery = "${var.raw_message_delivery}"
-  filter_policy        = "${var.filter_policy}"
-  delivery_policy      = "${var.delivery_policy}"
+  depends_on      =  ["aws_lambda_permission.lambda"]
+  topic_arn       = "${var.topic_arn}"
+  protocol        = "lambda"
+  endpoint        = "${aws_lambda_function.lambda.arn}"
+  filter_policy   = "${var.filter_policy}"
+  delivery_policy = "${var.delivery_policy}"
 }

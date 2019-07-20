@@ -28,3 +28,14 @@ module "sqs_pet_handler" {
   handler       = "com.github.kperson.sqs.pet"
   sqs_arn       = "${aws_sqs_queue.pet.arn}"
 }
+
+
+module "sns_pet_handler" {
+  #source = "github.com/kperson/swift-lambda-tools//terraform/sqs-lambda"
+  source        = "../../terraform/sns-lambda"
+  build_params  = "${local.build_params}"
+  env           = "${local.env}"
+  function_name = "sns_pet_handler"
+  handler       = "com.github.kperson.sns.pet"
+  topic_arn     = "${aws_sns_topic.pet.arn}"
+}

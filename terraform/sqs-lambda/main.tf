@@ -5,8 +5,18 @@ variable "build_params" {
 }
 
 variable "env" {
-  type = "map"
+  type    = "map"
   default = {}
+}
+
+variable "subnet_ids" {
+  type    = "list"
+  default = []
+}
+
+variable "security_group_ids" {
+  type    = "list"
+  default = []
 }
 
 # Common
@@ -48,14 +58,19 @@ resource "aws_lambda_function" "lambda" {
   layers           = ["${var.build_params["runtime_layer"]}"]
   source_code_hash = "${var.build_params["zip_file_hash"]}"
 
+  vpc_config {
+    subnet_ids         = "${var.subnet_ids}"
+    security_group_ids = "${var.security_group_ids}"
+  }
+
   environment {
     variables = "${var.env}"
   }
 }
 
 resource "aws_lambda_event_source_mapping" "lambda" {
-  batch_size        = 10
-  event_source_arn  = "${var.sqs_arn}"
-  enabled           = true
-  function_name     = "${aws_lambda_function.lambda.arn}"
+  batch_size       = 10
+  event_source_arn = "${var.sqs_arn}"
+  enabled          = true
+  function_name    = "${aws_lambda_function.lambda.arn}"
 }

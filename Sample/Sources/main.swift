@@ -3,7 +3,8 @@ import NIO
 import SwiftAWS
 import SQS
 import SNS
-import Vapor
+import S3
+import DynamoDB
 import VaporLambdaAdapter
 
 
@@ -15,12 +16,14 @@ struct Pet: Codable {
 }
 
 if  let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"],
-    let topicArn = ProcessInfo.processInfo.environment["PET_TOPIC_ARN"]  {
+    let topicArn = ProcessInfo.processInfo.environment["PET_TOPIC_ARN"],
+    let pets3Bucket = ProcessInfo.processInfo.environment["PET_S3_BUCKET"] {
 
-    let logger: Logger = LambdaLogger()
+    let logger = LambdaLogger()
     let awsApp = AWSApp()
-    let sqs = SQS(accessKeyId: nil, secretAccessKey: nil, region: nil, endpoint: nil)
-    let sns = SNS(accessKeyId: nil, secretAccessKey: nil, region: nil, endpoint: nil)
+    let sqs = SQS()
+    let sns = SNS()
+    let s3 = S3()
     
     awsApp.addSQS(name: "com.github.kperson.sqs.pet", type: Pet.self) { event in
         let futures = try event.bodyRecords.map { try sns.sendJSONMessage(message: $0, topicArn: topicArn) }
@@ -28,9 +31,15 @@ if  let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"],
     }
 
     awsApp.addSNS(name: "com.github.kperson.sns.pet", type: Pet.self) { event in
-        let pets = event.bodyRecords
-        logger.info("got SNS pets: \(pets)")
-        return event.eventLoop.newSucceededFuture(result: Void())
+        let fileName = "\(String(Date().timeIntervalSinceNow * 1000)).json"
+        return try s3.putObject(
+            S3.PutObjectRequest(
+                body: event.bodyRecords.asJSONData(),
+                bucket: pets3Bucket,
+                contentType: "application/json",
+                key: fileName
+            )
+        ).void()
     }
  
     awsApp.addDynamoStream(name: "com.github.kperson.dynamo.pet", type: Pet.self) { event in
@@ -40,8 +49,14 @@ if  let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"],
 
     awsApp.addS3(name: "com.github.kperson.s3.test") { event in
         logger.info("got s3 event records: \(event.records)")
-        return event.eventLoop.newSucceededFuture(result: Void())
+        return event.eventLoop.void()
     }
 
-    try awsApp.run()
+    do {
+        try awsApp.run()
+    }
+    catch let error {
+        logger.report(error: error)
+        exit(1)
+    }
 }

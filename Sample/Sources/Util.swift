@@ -17,6 +17,22 @@ public extension JSONEncoder {
         return String(data: data, encoding: .utf8)!
     }
     
+    func asData<T: Encodable>(item: T) -> Data {
+            return try! encode(item)
+    }
+    
+}
+
+public extension Encodable {
+    
+    func asJSONData(encoder: JSONEncoder = JSONEncoder()) -> Data {
+        return encoder.asData(item: self)
+    }
+    
+    func asJSONString(encoder: JSONEncoder = JSONEncoder()) -> String {
+        return encoder.asString(item: self)
+    }
+    
 }
 
 public extension JSONDecoder {
@@ -30,7 +46,23 @@ public extension JSONDecoder {
 public extension EventLoop {
     
     func groupedVoid<T>(_ futures: [EventLoopFuture<T>]) -> EventLoopFuture<Void> {
-        return EventLoopFuture.whenAll(futures, eventLoop: self).map { _  in Void() }
+        return EventLoopFuture.whenAll(futures, eventLoop: self).void()
+    }
+    
+    func void() -> EventLoopFuture<Void> {
+        return newSucceededFuture(result: Void())
+    }
+    
+    func error(error: Error) -> EventLoopFuture<Void> {
+        return newFailedFuture(error: error)
+    }
+    
+}
+
+public extension EventLoopFuture {
+    
+    func void() -> EventLoopFuture<Void> {
+        return map { _  in Void() }
     }
     
 }

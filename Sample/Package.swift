@@ -17,6 +17,7 @@ let package = Package(
                 "SwiftAWS",
                 "SNS",
                 "SQS",
+                "S3",
                 "DynamoDB"
             ],
             path: "./Sources"

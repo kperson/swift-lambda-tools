@@ -8,6 +8,7 @@
 import Foundation
 import NIO
 import AWSLambdaAdapter
+import VaporLambdaAdapter
 
 
 public protocol LambdaArrayRecord {
@@ -48,6 +49,9 @@ public class LambdaArrayRecordEventHandler<T: LambdaArrayRecord>: LambdaEventHan
                 return try handler(grouped).map { _ in [:] }
             }
             catch let error {
+                let logger = LambdaLogger()
+                logger.info("HERE")
+                logger.report(error: error, verbose: true)
                 return eventLoopGroup.eventLoop.newFailedFuture(error: error)
             }
         }

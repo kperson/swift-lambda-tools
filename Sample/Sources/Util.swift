@@ -12,25 +12,25 @@ import NIO
 
 public extension JSONEncoder {
     
-    func asString<T: Encodable>(item: T) -> String {
-        let data = try! encode(item)
+    func asString<T: Encodable>(item: T) throws -> String {
+        let data = try encode(item)
         return String(data: data, encoding: .utf8)!
     }
     
-    func asData<T: Encodable>(item: T) -> Data {
-            return try! encode(item)
+    func asData<T: Encodable>(item: T) throws -> Data {
+            return try encode(item)
     }
     
 }
 
 public extension Encodable {
     
-    func asJSONData(encoder: JSONEncoder = JSONEncoder()) -> Data {
-        return encoder.asData(item: self)
+    func asJSONData(encoder: JSONEncoder = JSONEncoder()) throws -> Data {
+        return try encoder.asData(item: self)
     }
     
-    func asJSONString(encoder: JSONEncoder = JSONEncoder()) -> String {
-        return encoder.asString(item: self)
+    func asJSONString(encoder: JSONEncoder = JSONEncoder()) throws -> String {
+        return try encoder.asString(item: self)
     }
     
 }
@@ -75,7 +75,7 @@ public extension SQS {
         jsonEncoder: JSONEncoder? = nil
     ) throws -> EventLoopFuture<SQS.SendMessageResult> {
         let encoder = jsonEncoder ?? JSONEncoder()
-        let body = SQS.SendMessageRequest(messageBody: encoder.asString(item: message), queueUrl: queueUrl)
+        let body = SQS.SendMessageRequest(messageBody: try encoder.asString(item: message), queueUrl: queueUrl)
         return try sendMessage(body)
     }
     
@@ -96,7 +96,7 @@ public extension SNS {
     ) throws -> EventLoopFuture<SNS.PublishResponse> {
         let encoder = jsonEncoder ?? JSONEncoder()
         let input = SNS.PublishInput(
-            message: encoder.asString(item: message),
+            message: try encoder.asString(item: message),
             messageAttributes: messageAttributes,
             messageStructure: messageStructure,
             phoneNumber: phoneNumber,

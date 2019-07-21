@@ -20,7 +20,7 @@ if  let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"],
     let pets3Bucket = ProcessInfo.processInfo.environment["PET_S3_BUCKET"] {
 
     let logger = LambdaLogger()
-    let awsApp = AWSApp()
+    let awsApp = AWSApp(
     let sqs = SQS()
     let sns = SNS()
     let s3 = S3()
@@ -31,7 +31,7 @@ if  let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"],
     }
 
     awsApp.addSNS(name: "com.github.kperson.sns.pet", type: Pet.self) { event in
-        let fileName = "\(String(Date().timeIntervalSinceNow * 1000)).json"
+        let fileName = "\(String(Date().timeIntervalSince1970 * 1000)).json"
         return try s3.putObject(
             S3.PutObjectRequest(
                 body: event.bodyRecords.asJSONData(),
@@ -52,11 +52,5 @@ if  let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"],
         return event.eventLoop.void()
     }
 
-    do {
-        try awsApp.run()
-    }
-    catch let error {
-        logger.report(error: error)
-        exit(1)
-    }
+    try awsApp.run()
 }

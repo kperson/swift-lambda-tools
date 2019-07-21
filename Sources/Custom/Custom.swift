@@ -5,6 +5,7 @@
 //  Created by Kelton Person on 7/4/19.
 //
 
+import Foundation
 import AWSLambdaAdapter
 import VaporLambdaAdapter
 import NIO
@@ -12,8 +13,9 @@ import NIO
 public class Custom {
     
     class func run(handler: LambdaEventHandler) {
-        
-        let dispatcher = LambdaEventDispatcher(handler: handler)
+        let logLevelStr = ProcessInfo.processInfo.environment["LOG_LEVEL"] ?? "INFO"
+        let level = BasicLambdaLoggerLevel(str: logLevelStr)
+        let dispatcher = LambdaEventDispatcher(handler: handler, logLevel: level)
         let logger = LambdaLogger()
         do {
             try dispatcher.start().wait()

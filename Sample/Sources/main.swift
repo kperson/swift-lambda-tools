@@ -20,7 +20,7 @@ if  let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"],
     let pets3Bucket = ProcessInfo.processInfo.environment["PET_S3_BUCKET"] {
 
     let logger = LambdaLogger()
-    let awsApp = AWSApp(
+    let awsApp = AWSApp()
     let sqs = SQS()
     let sns = SNS()
     let s3 = S3()

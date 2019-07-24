@@ -16,7 +16,7 @@ module "dynamo_stream_pet_handler" {
   env           = "${local.env}"
   function_name = "dynamo_stream_pet_handler"
   handler       = "com.github.kperson.dynamo.pet"
-  stream_arn    = "${aws_dynamodb_table.pet.stream_arn}"
+  stream_arn    = "${module.dynamo_pet.stream_arn}"
 }
 
 module "sqs_pet_handler" {

@@ -6,6 +6,7 @@ import SNS
 import S3
 import DynamoDB
 import VaporLambdaAdapter
+import AWSSDKSwiftCore
 
 
 struct Pet: Codable {
@@ -23,6 +24,7 @@ if  let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"],
     let awsApp = AWSApp()
     let sqs = SQS()
     let sns = SNS()
+    
     let s3 = S3()
     
     awsApp.addSQS(name: "com.github.kperson.sqs.pet", type: Pet.self) { event in
@@ -30,17 +32,17 @@ if  let queueUrl = ProcessInfo.processInfo.environment["PET_QUEUE_URL"],
         return event.eventLoop.groupedVoid(futures)
     }
 
-    awsApp.addSNS(name: "com.github.kperson.sns.pet", type: Pet.self) { event in
-        let fileName = "\(String(Date().timeIntervalSince1970 * 1000)).json"
-        return try s3.putObject(
-            S3.PutObjectRequest(
-                body: event.bodyRecords.asJSONData(),
-                bucket: pets3Bucket,
-                contentType: "application/json",
-                key: fileName
-            )
-        ).void()
-    }
+//    awsApp.addSNS(name: "com.github.kperson.sns.pet", type: Pet.self) { event in
+//        let fileName = "\(String(Date().timeIntervalSince1970 * 1000)).json"
+//        return try s3.putObject(
+//            S3.PutObjectRequest(
+//                body: event.bodyRecords.asJSONData(),
+//                bucket: pets3Bucket,
+//                contentType: "application/json",
+//                key: fileName
+//            )
+//        ).void()
+//    }
  
     awsApp.addDynamoStream(name: "com.github.kperson.dynamo.pet", type: Pet.self) { event in
         let futures = try event.bodyRecords.creates.map { try sqs.sendJSONMessage(message: $0, queueUrl: queueUrl) }

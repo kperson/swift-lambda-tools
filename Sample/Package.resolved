@@ -6,8 +6,8 @@
         "repositoryURL": "https://github.com/swift-aws/aws-sdk-swift.git",
         "state": {
           "branch": null,
-          "revision": "29a26999cc49e6a46f1a173c8478963ee80660c6",
-          "version": "3.0.1"
+          "revision": "fc7b893a5a04f107039263ec51fc47fe4e4dd4bb",
+          "version": "3.1.0"
         }
       },
       {
@@ -15,8 +15,8 @@
         "repositoryURL": "https://github.com/swift-aws/aws-sdk-swift-core.git",
         "state": {
           "branch": null,
-          "revision": "254c1e3f85414bf0f529f47cc081be2bd0c12c1c",
-          "version": "3.0.1"
+          "revision": "80cc521d5e3f42242f10d9d0fe268cf003a3badb",
+          "version": "3.1.1"
         }
       },
       {
@@ -123,7 +123,7 @@
         "repositoryURL": "https://github.com/kperson/swift-lambda-tools.git",
         "state": {
           "branch": "master",
-          "revision": "2163358aa783a7ecba3506c5d4c07d5388458f76",
+          "revision": "708c46974db590ef1bf2d94870c0dcc71e132779",
           "version": null
         }
       },
@@ -161,15 +161,6 @@
           "branch": null,
           "revision": "37760e9a52030bb9011972c5213c3350fa9d41fd",
           "version": "1.0.0"
-        }
-      },
-      {
-        "package": "SwiftyJSON",
-        "repositoryURL": "https://github.com/SwiftyJSON/SwiftyJSON.git",
-        "state": {
-          "branch": null,
-          "revision": "2b6054efa051565954e1d2b9da831680026cd768",
-          "version": "4.3.0"
         }
       },
       {

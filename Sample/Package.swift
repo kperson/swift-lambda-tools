@@ -7,7 +7,7 @@ let package = Package(
         .library(name: "Sample", targets: ["Sample"])
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-aws/aws-sdk-swift.git", .upToNextMinor(from: "3.0.0")),
+        .package(url: "https://github.com/swift-aws/aws-sdk-swift.git", .upToNextMinor(from: "3.1.0")),
         .package(url: "https://github.com/kperson/swift-lambda-tools.git", .branch("master"))
     ],
     targets: [

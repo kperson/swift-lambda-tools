@@ -118,4 +118,5 @@ resource "null_resource" "cleanup_dir" {
       ZIP_FILE_HASH = "${data.archive_file.zip.output_base64sha256}"
     }
   }
+  
 }

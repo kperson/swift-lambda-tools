@@ -18,9 +18,9 @@ module "dynamo_pet" {
 }
 
 module "dynamo_pet_policy" {
-    source    = "github.com/kperson/terraform-modules//dynamo-crud-policy"
-    table_arn = "${module.dynamo_pet.arn}"
-    stream_arn = "${module.dynamo_pet.stream_arn}"
+  source     = "github.com/kperson/terraform-modules//dynamo-crud-policy"
+  table_arn  = "${module.dynamo_pet.arn}"
+  stream_arn = "${module.dynamo_pet.stream_arn}"
 }
 
 

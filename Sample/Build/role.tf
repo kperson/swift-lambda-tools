@@ -46,8 +46,7 @@ data "template_file" "role_arn" {
     "aws_iam_role_policy_attachment.log",
     "aws_iam_role_policy_attachment.sqs_pet",
     "aws_iam_role_policy_attachment.dynamo_pet",
-    "aws_iam_role_policy_attachment.sns_pet",
-    "aws_iam_role_policy_attachment.s3_pet"
+    "aws_iam_role_policy_attachment.sns_pet"
   ]
   template = "$${arn}"
 

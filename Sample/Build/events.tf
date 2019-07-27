@@ -44,12 +44,12 @@ module "http_pet" {
   source               = "../../terraform/http-lambda"
   build_params         = "${local.build_params}"
   env                  = "${local.env}"
-  function_name        = "TODO"
-    handler            = "com.github.kperson.http.pet"
+  function_name        = "http_pet_handler"
+  handler              = "com.github.kperson.http.pet"
+  stage_name           = "default"
   api_id               = "${aws_api_gateway_rest_api.pet.id}"
   api_root_resource_id = "${aws_api_gateway_rest_api.pet.root_resource_id}"
 }
-
 
 output "docker_tag" {
   value = "${module.build.docker_tag}"

@@ -9,6 +9,9 @@ import Foundation
 import SQS
 import SNS
 import NIO
+import SwiftAWS
+import DynamoDB
+import Vapor
 
 public extension JSONEncoder {
     
@@ -106,4 +109,69 @@ public extension SNS {
         )
         return try publish(input)
     }
+}
+
+
+public extension Encodable {
+    
+    func toDynamoAttributeValue(caseSettings: CaseSettings? = nil) throws -> [String : DynamoDB.AttributeValue] {
+        var newDict: [String : DynamoDB.AttributeValue] = [:]
+        if let dict = try toDynamo(caseSettings: caseSettings) as? [String : [String : Any]] {
+            for (k, v) in dict {
+                if let av = v.dynamoAttributeValue {
+                    newDict[k] = av
+                }
+            }
+        }
+        return newDict
+    }
+    
+}
+
+public extension Dictionary where Key == String {
+
+    var dynamoAttributeValue: DynamoDB.AttributeValue? {
+        if let s = self["S"] as? String {
+            return DynamoDB.AttributeValue(s: s)
+        }
+        else if let n = self["N"] as? String {
+            return DynamoDB.AttributeValue(n: n)
+        }
+        else if let bool = self["BOOL"] as? Bool {
+            return DynamoDB.AttributeValue(bool: bool)
+        }
+        else if let null = self["NULL"] as? Bool {
+            return DynamoDB.AttributeValue(null: null)
+        }
+        else if let base64 = self["B"] as? String, let data = Data(base64Encoded: base64) {
+            return DynamoDB.AttributeValue(b: data)
+        }
+        else if let l = self["L"] as? [[String : Any]] {
+            let list = l.compactMap { $0.dynamoAttributeValue }
+            return DynamoDB.AttributeValue(l: list)
+        }
+        else if let m = self["M"] as? [String : [String : Any]] {
+            var dict: [String: DynamoDB.AttributeValue] = [:]
+            for (k, v) in m {
+                if let av = v.dynamoAttributeValue {
+                    dict[k] = av
+                }
+            }
+            return DynamoDB.AttributeValue(m: dict)
+        }
+        return nil
+    
+    }
+
+}
+
+
+public extension Vapor.Request {
+    
+    var noContentResponse: Vapor.Response {
+        let r = response()
+        r.http.status = .noContent
+        return r
+    }
+    
 }

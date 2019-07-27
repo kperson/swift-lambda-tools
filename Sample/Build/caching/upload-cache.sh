@@ -13,10 +13,8 @@ then
     fi
 
     docker_tag=$(terraform output docker_tag)
-    docker run --rm -v $(pwd):/out $docker_tag cp -R /code/.lambda-build /out/.lambda-build
+    docker run --rm -v $(pwd):/out --workdir /code $docker_tag  /bin/bash -c "apt-get -y install zip && zip -q -r $BUILD_CACHE_ZIP .lambda-build && cp $BUILD_CACHE_ZIP /out/$BUILD_CACHE_ZIP"
 
-    zip -r $BUILD_CACHE_ZIP .lambda-build    
-    aws s3 cp $BUILD_CACHE_ZIP s3://$BUILD_CACHE_BUCKET/$BUILD_CACHE_ZIP
-    
+    aws s3 cp $BUILD_CACHE_ZIP s3://$BUILD_CACHE_BUCKET/$BUILD_CACHE_ZIP    
     rm $BUILD_CACHE_ZIP
 fi

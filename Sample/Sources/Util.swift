@@ -46,29 +46,6 @@ public extension JSONDecoder {
     
 }
 
-public extension EventLoop {
-    
-    func groupedVoid<T>(_ futures: [EventLoopFuture<T>]) -> EventLoopFuture<Void> {
-        return EventLoopFuture.whenAll(futures, eventLoop: self).void()
-    }
-    
-    func void() -> EventLoopFuture<Void> {
-        return newSucceededFuture(result: Void())
-    }
-    
-    func error(error: Error) -> EventLoopFuture<Void> {
-        return newFailedFuture(error: error)
-    }
-    
-}
-
-public extension EventLoopFuture {
-    
-    func void() -> EventLoopFuture<Void> {
-        return map { _  in Void() }
-    }
-    
-}
 
 public extension SQS {
     
@@ -83,7 +60,6 @@ public extension SQS {
     }
     
 }
-
 
 public extension SNS {
     
@@ -163,15 +139,4 @@ public extension Dictionary where Key == String {
     
     }
 
-}
-
-
-public extension Vapor.Request {
-    
-    var noContentResponse: Vapor.Response {
-        let r = response()
-        r.http.status = .noContent
-        return r
-    }
-    
 }

@@ -25,6 +25,7 @@ public protocol LambdaArrayRecord {
 public class LambdaArrayRecordEventHandler<T: LambdaArrayRecord>: LambdaEventHandler {
     
     let handler: (GroupedRecords<LambdaExecutionContext, T.Meta, T.Body>) throws -> EventLoopFuture<Void>
+    let logger = LambdaLogger()
     
     public init(handler: @escaping (GroupedRecords<LambdaExecutionContext, T.Meta, T.Body>) throws -> EventLoopFuture<Void>) {
         self.handler = handler
@@ -46,11 +47,10 @@ public class LambdaArrayRecordEventHandler<T: LambdaArrayRecord>: LambdaEventHan
             )
             
             do {
+                logger.verbose("handling group event: \(grouped)")
                 return try handler(grouped).map { _ in [:] }
             }
             catch let error {
-                let logger = LambdaLogger()
-                logger.info("HERE")
                 logger.report(error: error, verbose: true)
                 return eventLoopGroup.eventLoop.newFailedFuture(error: error)
             }

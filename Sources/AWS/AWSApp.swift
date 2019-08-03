@@ -8,6 +8,7 @@
 import Foundation
 import Vapor
 import AWSLambdaAdapter
+import VaporLambdaAdapter
 
 
 
@@ -42,6 +43,8 @@ public enum EventHandler {
     
 }
 public class AWSApp {
+    
+    let logger = LambdaLogger()
     
     private var handlers: [String: EventHandler] = [:]
     
@@ -95,6 +98,7 @@ public extension AWSApp {
         name: String,
         function: @escaping (ContextData<LambdaExecutionContext, [String : Any]>) throws -> EventLoopFuture<[String : Any]>
     ) {
+        logger.debug("registering custom handler with \(name)")
         let h: ([String: Any], [String: Any], EventLoopGroup) throws -> EventLoopFuture<[String : Any]> = { dict, requestContext, group in
             try function(ContextData(
                 context: LambdaExecutionContext(eventLoopGroup: group, requestContext: requestContext),
@@ -106,6 +110,7 @@ public extension AWSApp {
 
     
     func addSQS(name: String, handler: @escaping SQSHandler) {
+        logger.debug("registering SQS handler with \(name)")
         add(name: name, handler: .sqs(handler: handler))
     }
     
@@ -117,12 +122,14 @@ public extension AWSApp {
         handler: @escaping (GroupedRecords<LambdaExecutionContext, SQSRecordMeta, T>) throws -> EventLoopFuture<Void>
     ) {
         addSQS(name: name) { payload -> EventLoopFuture<Void> in
+            self.logger.debug("received raw SQS event, converting to \(type)")
             let event = try payload.fromJSON(type: type, decoder: decoder)
             return try handler(event)
         }
     }
     
     func addSNS(name: String, handler: @escaping SNSHandler) {
+        logger.debug("registering SNS handler with \(name)")
         add(name: name, handler: .sns(handler: handler))
     }
     
@@ -133,16 +140,19 @@ public extension AWSApp {
         handler: @escaping (GroupedRecords<LambdaExecutionContext, SNSRecordMeta, T>) throws -> EventLoopFuture<Void>
     ) {
         addSNS(name: name) { payload -> EventLoopFuture<Void> in
+            self.logger.debug("received raw SNS event, converting to \(type)")
             let event = try payload.fromJSON(type: type, decoder: decoder)
             return try handler(event)
         }
     }
     
     func addS3(name: String, handler: @escaping S3Handler) {
+        logger.debug("registering S3 handler with \(name)")
         add(name: name, handler: .s3(handler: handler))
     }
     
     func addDynamoStream(name: String, handler: @escaping DynamoStreamHandler) {
+        logger.debug("registering Dynamo stream handler with \(name)")
         add(name: name, handler: .dynamoStream(handler: handler))
     }
     
@@ -153,6 +163,7 @@ public extension AWSApp {
         handler: @escaping (GroupedRecords<LambdaExecutionContext, DynamoStreamRecordMeta, ChangeCapture<T>>) throws -> EventLoopFuture<Void>
         ) {
         addDynamoStream(name: name) { payload -> EventLoopFuture<Void> in
+            self.logger.debug("received raw dynamo event, converting to \(type)")
             let event = try payload.fromDynamo(
                 type: type,
                 caseSettings: caseSetting
@@ -168,6 +179,7 @@ public extension AWSApp {
         services: Services?,
         handler: @escaping (Router, Application) -> Void
     ) {
+        logger.debug("registering HTTP server with \(name)")
         add(
             name: name,
             handler: .httpServer(

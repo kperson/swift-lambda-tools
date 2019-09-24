@@ -70,7 +70,7 @@ resource "aws_lambda_function" "lambda" {
   memory_size      = "${var.memory_size}"
   timeout          = "${var.timeout}"
   publish          = true
-  layers           = ["${var.runtime_layers}"]
+  layers           = "${var.runtime_layers}"
   source_code_hash = "${var.build_params["zip_file_hash"]}"
 
   vpc_config {

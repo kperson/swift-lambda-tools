@@ -1,5 +1,10 @@
 #Build 
 
+variable "runtime_layers" {
+  type = "list"
+  default = []
+}
+
 variable "build_params" {
   type = "map"
 }
@@ -49,7 +54,7 @@ resource "aws_lambda_function" "lambda" {
   memory_size      = "${var.memory_size}"
   timeout          = "${var.timeout}"
   publish          = true
-  layers           = ["${var.build_params["runtime_layer"]}"]
+  layers           = ["${var.runtime_layers}"]
   source_code_hash = "${var.build_params["zip_file_hash"]}"
 
   vpc_config {

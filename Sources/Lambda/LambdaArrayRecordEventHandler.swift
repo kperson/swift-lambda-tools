@@ -36,6 +36,7 @@ public class LambdaArrayRecordEventHandler<T: LambdaArrayRecord>: LambdaEventHan
         headers: [String : Any],
         eventLoopGroup: EventLoopGroup
     ) -> EventLoopFuture<[String : Any]> {
+        logger.verbose("handling array event: \(data.debugDescription)")
         if let records = data["Records"] as? [[String : Any]] {
             let transformedRecords = records
                 .compactMap { T(dict: $0) }

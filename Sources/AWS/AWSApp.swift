@@ -87,8 +87,59 @@ public class AWSApp {
     
 }
 
+public enum TestVoidPayload {
+    
+    case sqs(SQSPayload)
+    
+    case sns(SNSPayload)
+    
+    case dynamoStream(DynamoStreamPayload)
+    
+    case s3(S3Payload)
+    
+    case custom(data: [String: Any], headers: [String : Any], eventLoopGroup: EventLoopGroup)
+    
+}
+
 
 public extension AWSApp {
+    
+    //NOTE: used for local automated testing only
+    func testVoidCall(name: String, payload: TestVoidPayload) -> EventLoopFuture<Void> {
+        if let handler = handlers[name] {
+            do {
+                switch (handler, payload) {
+                case (.sqs(handler: let h), .sqs(let p)): return try h(p)
+                case (.sns(handler: let h), .sns(let p)): return try h(p)
+                case (.dynamoStream(handler: let h), .dynamoStream(let p)): return try h(p)
+                case (.s3(handler: let h), .s3(let p)): return try h(p)
+                default: fatalError("payload/handler combination not supported")
+                }
+            }
+            catch let error {
+                return MultiThreadedEventLoopGroup(numberOfThreads: 1).future(error: error)
+            }
+        }
+        fatalError("handler not found name: \(name)")
+    }
+    
+    //NOTE: used for local automated testing only
+    func testCustomCall(
+        name: String,
+        payload: [String : Any] = [:],
+        headers: [String : Any] = [:]
+    ) -> EventLoopFuture<[String : Any]> {
+        if let handler = handlers[name] {
+            do {
+                switch handler {
+                case .custom(handler: let h): return h.handle(data: payload, headers: headers, eventLoopGroup:  MultiThreadedEventLoopGroup(numberOfThreads: 1))
+                default: fatalError("handler not supported")
+                }
+            }
+        }
+        fatalError("handler not found name: \(name)")
+    }
+
 
     func addCustom(name: String, handler: LambdaEventHandler) {
         add(name: name, handler: .custom(handler: handler))

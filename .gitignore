@@ -1,8 +1,9 @@
 .build/
-*.xcodeproj/
 .DS_Store
 .terraform/
 terraform.tfstate
 terraform.tfstate.backup
 .terraform.tfstate.lock.info
 .lambda-build/
+.swiftpm/
+Sample/swift-aws-sample.xcodeproj/

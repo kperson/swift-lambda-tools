@@ -1,53 +1,53 @@
 #Build 
 
 variable "build_params" {
-  type = "map"
+  type = map(string)
 }
 
 variable "runtime_layers" {
-  type = "list"
+  type = list(string)
   default = []
 }
 
 variable "env" {
-  type    = "map"
+  type    = map(string)
   default = {}
 }
 
 # Common
 variable "function_name" {
-  type = "string"
+  type = string
 }
 
 variable "handler" {
-  type = "string"
+  type = string
 }
 
 variable "subnet_ids" {
-  type    = "list"
+  type    = list(string)
   default = []
 }
 
 variable "security_group_ids" {
-  type    = "list"
+  type    = list(string)
   default = []
 }
 
 # Common Custom
 variable "memory_size" {
-  type    = "string"
+  type    = string
   default = "256"
 }
 
 variable "timeout" {
-  type    = "string"
+  type    = string
   default = "180"
 }
 
 # Dynamo Stream
 
 variable "stream_arn" {
-  type = "string"
+  type = string
 }
 
 
@@ -70,7 +70,7 @@ resource "aws_lambda_function" "lambda" {
   }
 
   environment {
-    variables = "${var.env}"
+    variables = var.env
   }
 }
 

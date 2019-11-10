@@ -1,41 +1,41 @@
 #Build 
 
 variable "runtime_layers" {
-  type = "list"
+  type = list(string)
   default = []
 }
 
 variable "build_params" {
-  type = "map"
+  type = map(string)
 }
 
 variable "env" {
-  type    = "map"
+  type    = map(string)
   default = {}
 }
 
 variable "subnet_ids" {
-  type    = "list"
+  type    = list(string)
   default = []
 }
 
 variable "security_group_ids" {
-  type    = "list"
+  type    = list(string)
   default = []
 }
 
 # Common
 variable "function_name" {
-  type = "string"
+  type = string
 }
 
 variable "handler" {
-  type = "string"
+  type = string
 }
 
 # Common Custom
 variable "memory_size" {
-  type    = "string"
+  type    = string
   default = "256"
 }
 
@@ -47,16 +47,16 @@ variable "timeout" {
 # SNS
 
 variable "topic_arn" {
-  type = "string"
+  type = string
 }
 
 variable "filter_policy" {
-  type    = "string"
+  type    = string
   default = null
 }
 
 variable "delivery_policy" {
-  type    = "string"
+  type    = string
   default = null
 }
 

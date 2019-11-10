@@ -1,18 +1,18 @@
 variable "working_dir" {
-  type = "string"
+  type = string
 }
 
 variable "executable_location" {
-  type = "string"
+  type = string
 }
 
 variable "docker_file" {
-  type    = "string"
+  type    = string
   default = "NA"
 }
 
 variable "dind_mount" {
-  type    = "string"
+  type    = string
   default = ""
 }
 

@@ -1,81 +1,81 @@
 #Build 
 
 variable "runtime_layers" {
-  type = "list"
+  type = list(string)
   default = []
 }
 
 variable "build_params" {
-  type = "map"
+  type = map(string)
 }
 
 variable "env" {
-  type    = "map"
+  type    = map(string)
   default = {}
 }
 
 variable "subnet_ids" {
-  type    = "list"
+  type    = list(string)
   default = []
 }
 
 variable "security_group_ids" {
-  type    = "list"
+  type    = list(string)
   default = []
 }
 
 # Common
 variable "function_name" {
-  type = "string"
+  type = string
 }
 
 variable "handler" {
-  type = "string"
+  type = string
 }
 
 # Common Custom
 variable "memory_size" {
-  type    = "string"
+  type    = string
   default = "256"
 }
 
 variable "timeout" {
-  type    = "string"
+  type    = string
   default = "30"
 }
 
 # HTTP
 
 variable "api_id" {
-  type = "string"
+  type = string
 }
 
 variable "api_root_resource_id" {
-  type = "string"
+  type = string
 }
 
 variable "authorization" {
-  type    = "string"
+  type    = string
   default = "NONE"
 }
 
 variable "authorizer_id" {
-  type    = "string"
+  type    = string
   default = null
 }
 
 variable "api_key_required" {
-  type    = "string"
+  type    = string
   default = null
 }
 
 variable "authorization_scopes" {
-  type    = "list"
+  type    = list(string)
   default = null
 }
 
 variable "stage_name" {
-  type = "string"
+  type = string
   default = null
 }
 

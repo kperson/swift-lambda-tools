@@ -1,31 +1,31 @@
 #Build 
 
 variable "runtime_layers" {
-  type = "list"
+  type = list(string)
   default = []
 }
 variable "build_params" {
-  type = "map"
+  type = map(string)
 }
 
 variable "env" {
-  type    = "map"
+  type    = map(string)
   default = {}
 }
 
 variable "subnet_ids" {
-  type    = "list"
+  type    = list(string)
   default = []
 }
 
 variable "security_group_ids" {
-  type    = "list"
+  type    = list(string)
   default = []
 }
 
 # Common
 variable "function_name" {
-  type = "string"
+  type = string
 }
 
 variable "handler" {
@@ -34,19 +34,19 @@ variable "handler" {
 
 # Common Custom
 variable "memory_size" {
-  type    = "string"
+  type    = string
   default = "256"
 }
 
 variable "timeout" {
-  type    = "string"
+  type    = string
   default = "180"
 }
 
 # SQS
 
 variable "sqs_arn" {
-  type = "string"
+  type = string
 }
 
 

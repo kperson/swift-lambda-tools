@@ -57,7 +57,7 @@ resource "null_resource" "docker_extract" {
   }
 
   provisioner "local-exec" {
-    command = templatefile(file(format("%s/extract_script.tpl", path.module)), {
+    command = templatefile(format("%s/extract_script.tpl", path.module), {
       dind_mount     = var.dind_mount,
       container_file = var.executable_location,
       tag            = random_string.tag.result,

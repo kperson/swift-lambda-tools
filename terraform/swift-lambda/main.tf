@@ -1,46 +1,46 @@
 #Build 
 
 variable "runtime_layers" {
-  type = "list"
+  type = list
   default = []
 }
 
 variable "build_params" {
-  type = "map"
+  type = map
 }
 
 variable "subnet_ids" {
-  type = "list"
+  type = list
   default = []
 }
 
 variable "security_group_ids" {
-  type = "list"
+  type = list
   default = []
 }
 
 variable "env" {
-  type = "map"
+  type = map(string)
   default = {}
 }
 
 # Common
 variable "function_name" {
-  type = "string"
+  type = string
 }
 
 variable "handler" {
-  type = "string"
+  type = string
 }
 
 # Common Custom
 variable "memory_size" {
-  type    = "string"
+  type    = string
   default = "256"
 }
 
 variable "timeout" {
-  type    = "string"
+  type    = string
   default = "180"
 }
 

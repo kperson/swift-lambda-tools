@@ -1,10 +1,3 @@
-//
-//  DynamoDecoder.swift
-//  AWSLambdaAdapter
-//
-//  Created by Kelton Person on 7/5/19.
-//
-
 import Foundation
 
 public class DynamoDecoder: Decoder {
@@ -64,6 +57,7 @@ public class DynamoDecoder: Decoder {
 public class DataDynamoDecoder: DynamoDecoder {
     
     
+    
     override public func unkeyedContainer() throws -> UnkeyedDecodingContainer {
         if let b = dict["B"] as? String, let data = Data(base64Encoded: b) {
             let list = [UInt8](data).map {
@@ -85,6 +79,7 @@ public class DataDynamoDecoder: DynamoDecoder {
     }
     
 }
+
 
 public extension DynamoDecoder {
     
@@ -381,6 +376,9 @@ public struct DynamoSingleValueDecodingContainer: SingleValueDecodingContainer {
         if let b = dict["BOOL"] as? Bool {
             return b
         }
+        else if let b = dict["BOOL"] as? UInt32 {
+            return b == 1
+        }
         else {
             throw valueNotFoundError(type: type)
         }
@@ -527,6 +525,9 @@ public struct KeyedDecodingContainerDynamoDict<K>: KeyedDecodingContainerProtoco
         if let dDict = try? decodeDynamo(key: key), let b = dDict["BOOL"] as? Bool {
             return b
         }
+        else if let dDict = try? decodeDynamo(key: key), let b = dDict["BOOL"] as? UInt32 {
+            return b == 1
+        }
         else {
             throw unableToDecodeError(key: key)
         }
@@ -548,6 +549,9 @@ public struct KeyedDecodingContainerDynamoDict<K>: KeyedDecodingContainerProtoco
             }
             else if let _ = nestedDict["B"] as? String, type == Data.self {
                 return try T(from: DataDynamoDecoder(dict: nestedDict, codingPath: codingPath + [key], caseSettings: caseSettings))
+            }
+            else if let decStr = nestedDict["N"] as? String, let decimal = Decimal(string: decStr), type == Decimal.self {
+                return decimal as! T
             }
             else {
                 return try T(from: DynamoDecoder(dict: nestedDict, codingPath: codingPath + [key], caseSettings: caseSettings))

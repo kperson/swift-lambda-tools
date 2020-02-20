@@ -7,6 +7,7 @@
 
 import Foundation
 
+
 public class DynamoEncoder: Encoder {
     
     public let dict: UnsafeMutablePointer<[String : Any]>
@@ -59,7 +60,12 @@ public extension DynamoEncoder {
         var dict: [String : Any] = [:]
         let encoder = DynamoEncoder(dict: &dict, codingPath: [], caseSettings: caseSettings)
         try value.encode(to: encoder)
-        return encoder.dict.pointee
+        if let rootDict = encoder.dict.pointee["M"] as? [String : [String : Any]], dict.count == 1 {
+            return rootDict
+        }
+        else {
+            return encoder.dict.pointee
+        }
     }
 
 }
@@ -157,6 +163,9 @@ public struct DyanmoSingleValueEncodingContainer: SingleValueEncodingContainer {
     public mutating func encode<T>(_ value: T) throws where T : Encodable {
         if let v = value as? Data {
             try encodeData(v)
+        }
+        else if let v = value as? Decimal {
+            dict.pointee["N"] = NSDecimalNumber(decimal: v).stringValue
         }
         else {
             var newDict: [String : Any] = [:]
@@ -662,3 +671,13 @@ public struct DynamoUnkeyedEncodingContainer: UnkeyedEncodingContainer {
     }
     
 }
+
+
+
+
+
+
+
+
+
+

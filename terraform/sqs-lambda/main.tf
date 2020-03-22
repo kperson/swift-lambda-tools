@@ -29,7 +29,7 @@ variable "function_name" {
 }
 
 variable "handler" {
-  type = "string"
+  type = string
 }
 
 # Common Custom

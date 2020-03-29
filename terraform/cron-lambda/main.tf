@@ -45,6 +45,7 @@ variable "timeout" {
 
 # CloudWatch
 
+# https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html
 variable "schedule_expression" {
   type = string
 }

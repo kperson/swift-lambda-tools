@@ -158,7 +158,7 @@
         "package": "vapor-lambda-adapter",
         "repositoryURL": "https://github.com/kperson/vapor-lambda-adapter.git",
         "state": {
-          "branch": "master",
+          "branch": null,
           "revision": "f9c50553bb0a90829a3d073a78e73a6ad44fcab0",
           "version": null
         }

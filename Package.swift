@@ -7,7 +7,7 @@ let package = Package(
         .library(name: "SwiftAWS", targets: ["SwiftAWS"])
     ],
     dependencies: [
-        .package(url: "https://github.com/kperson/vapor-lambda-adapter.git", .revision("f9c50553bb0a90829a3d073a78e73a6ad44fcab0"))
+        .package(url: "https://github.com/kperson/vapor-lambda-adapter.git", .revision("master"))
     ],
     targets: [
         .target(

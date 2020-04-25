@@ -1,7 +1,7 @@
 #Build 
 
 variable "runtime_layers" {
-  type = list(string)
+  type    = list(string)
   default = []
 }
 
@@ -34,13 +34,18 @@ variable "handler" {
 }
 
 # Common Custom
+variable "reserved_concurrent_executions" {
+  type    = number
+  default = -1
+}
+
 variable "memory_size" {
   type    = string
   default = "256"
 }
 
 variable "timeout" {
-  type    = "string"
+  type    = string
   default = "180"
 }
 
@@ -62,16 +67,17 @@ variable "delivery_policy" {
 
 
 resource "aws_lambda_function" "lambda" {
-  filename         = var.build_params["zip_file"]
-  function_name    = var.function_name
-  role             = var.build_params["role"]
-  handler          = var.handler
-  runtime          = "provided"
-  memory_size      = var.memory_size
-  timeout          = var.timeout
-  publish          = true
-  layers           = var.runtime_layers
-  source_code_hash = var.build_params["zip_file_hash"]
+  filename                       = var.build_params["zip_file"]
+  function_name                  = var.function_name
+  role                           = var.build_params["role"]
+  handler                        = var.handler
+  runtime                        = "provided"
+  memory_size                    = var.memory_size
+  timeout                        = var.timeout
+  publish                        = true
+  layers                         = var.runtime_layers
+  source_code_hash               = var.build_params["zip_file_hash"]
+  reserved_concurrent_executions = var.reserved_concurrent_executions
 
   vpc_config {
     subnet_ids         = var.subnet_ids
@@ -96,6 +102,6 @@ resource "aws_sns_topic_subscription" "lambda" {
   topic_arn       = var.topic_arn
   protocol        = "lambda"
   endpoint        = aws_lambda_function.lambda.arn
-  filter_policy   = "var.filter_policy
-  delivery_policy = "var.delivery_policy
+  filter_policy   = var.filter_policy
+  delivery_policy = var.delivery_policy
 }

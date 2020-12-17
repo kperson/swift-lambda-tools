@@ -83,6 +83,7 @@ resource "aws_cloudwatch_event_target" "event_target" {
 }
 
 resource "aws_lambda_permission" "lambda_permission" {
+  depends_on =  [aws_lambda_function.lambda]
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
   function_name = var.function_name

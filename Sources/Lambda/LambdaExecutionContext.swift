@@ -13,4 +13,9 @@ public struct LambdaExecutionContext {
     public let eventLoopGroup: EventLoopGroup
     public let requestContext: [String : Any]
     
+    public init(eventLoopGroup: EventLoopGroup, requestContext: [String : Any]) {
+        self.eventLoopGroup = eventLoopGroup
+        self.requestContext = requestContext
+    }
+    
 }
